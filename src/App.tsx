@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Feed from './pages/Feed';
 import Settings from './pages/Settings';
+import InstallPrompt from './components/InstallPrompt';
 
 function App() {
   const [darkMode, setDarkMode] = useState(true);
@@ -30,6 +31,7 @@ function App() {
 
   return (
     <Router>
+      <InstallPrompt />
       <Layout>
         <Routes>
           <Route path="/" element={<Dashboard />} />
