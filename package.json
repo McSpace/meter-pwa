@@ -10,7 +10,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "generate-icons": "node generate-pwa-icons.cjs",
-    "start": "serve -s dist -p ${PORT:-8080}"
+    "start": "serve -s dist -p 8080"
   },
   "dependencies": {
     "react": "^19.1.1",
