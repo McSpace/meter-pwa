@@ -9,11 +9,13 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "generate-icons": "node generate-pwa-icons.cjs"
+    "generate-icons": "node generate-pwa-icons.cjs",
+    "start": "serve -s dist -p ${PORT:-8080}"
   },
   "dependencies": {
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "serve": "^14.2.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
