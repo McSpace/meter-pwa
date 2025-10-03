@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Health Dashboard</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<style type="text/tailwindcss">
+        @layer base {
+            html {
+                font-family: Inter, sans-serif;
+            }
+        }
+    </style>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#30e8c9",
+                        "background-light": "#f6f8f8",
+                        "background-dark": "#11211e",
+                        "foreground-light": "#111817",
+                        "foreground-dark": "#e8ebea",
+                        "subtle-light": "#9ca3af",
+                        "subtle-dark": "#6b7280",
+                        "card-light": "#ffffff",
+                        "card-dark": "#1f2927",
+                        "border-light": "#e5e7eb",
+                        "border-dark": "#374151"
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="flex flex-col h-screen justify-between">
+<main class="flex-grow overflow-y-auto">
+<header class="sticky top-0 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm z-10 p-4">
+<h1 class="text-xl font-bold text-center text-foreground-light dark:text-foreground-dark">Dashboard</h1>
+</header>
+<div class="p-4 space-y-6">
+<div class="relative">
+<select class="w-full appearance-none bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark text-foreground-light dark:text-foreground-dark rounded-lg h-12 px-4 focus:outline-none focus:ring-2 focus:ring-primary">
+<option>Weight</option>
+<option>Blood Pressure</option>
+<option>Pulse</option>
+</select>
+<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-subtle-light dark:text-subtle-dark">
+<svg aria-hidden="true" class="h-5 w-5" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+<path clip-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" fill-rule="evenodd"></path>
+</svg>
+</div>
+</div>
+<div class="bg-card-light dark:bg-card-dark p-4 rounded-xl">
+<div class="flex justify-between items-start">
+<div>
+<p class="text-sm text-subtle-light dark:text-subtle-dark">Weight</p>
+<p class="text-3xl font-bold text-foreground-light dark:text-foreground-dark mt-1">150 lbs</p>
+<p class="text-sm text-subtle-light dark:text-subtle-dark mt-1">-2% vs last week</p>
+</div>
+<div class="flex bg-background-light dark:bg-background-dark p-1 rounded-full text-sm">
+<button class="px-3 py-1 rounded-full bg-primary text-black">1W</button>
+<button class="px-3 py-1 rounded-full text-subtle-light dark:text-subtle-dark">1M</button>
+<button class="px-3 py-1 rounded-full text-subtle-light dark:text-subtle-dark">1Y</button>
+</div>
+</div>
+<div class="mt-4 h-48">
+<svg fill="none" height="100%" preserveaspectratio="none" viewbox="0 0 400 150" width="100%" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<lineargradient gradientunits="userSpaceOnUse" id="chartGradient" x1="0" x2="0" y1="0" y2="150">
+<stop stop-color="#30e8c9" stop-opacity="0.2"></stop>
+<stop offset="1" stop-color="#30e8c9" stop-opacity="0"></stop>
+</lineargradient>
+</defs>
+<path d="M 0 100 C 40 120, 60 40, 100 50 C 140 60, 160 130, 200 120 C 240 110, 260 20, 300 30 C 340 40, 360 90, 400 80" fill="url(#chartGradient)" stroke="#30e8c9" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"></path>
+</svg>
+</div>
+<div class="flex justify-between text-xs text-subtle-light dark:text-subtle-dark mt-2">
+<span>Mon</span>
+<span>Tue</span>
+<span>Wed</span>
+<span>Thu</span>
+<span>Fri</span>
+<span>Sat</span>
+<span>Sun</span>
+</div>
+</div>
+</div>
+</main>
+<nav class="bg-card-light dark:bg-card-dark border-t border-border-light dark:border-border-dark p-2">
+<div class="flex justify-around items-center">
+<a class="flex flex-col items-center gap-1 text-subtle-light dark:text-subtle-dark p-2" href="#">
+<svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 12h6m-3 8h.01M17 10h.01" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="text-xs">Feed</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-primary p-2" href="#">
+<div class="relative">
+<svg class="h-7 w-7" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+<path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z"></path>
+<path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z"></path>
+</svg>
+</div>
+<span class="text-xs font-bold">Dashboard</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-subtle-light dark:text-subtle-dark p-2" href="#">
+<svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke-linecap="round" stroke-linejoin="round"></path>
+<path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="text-xs">Settings</span>
+</a>
+</div>
+</nav>
+</div>
+</body></html>
