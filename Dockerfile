@@ -1,5 +1,5 @@
 # Build stage
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
@@ -9,11 +9,8 @@ COPY package*.json ./
 # Install dependencies
 RUN npm ci
 
-# Copy source code
+# Copy source code (including pre-generated PNG icons)
 COPY . .
-
-# Generate PWA icons
-RUN npm run generate-icons
 
 # Build the app
 RUN npm run build

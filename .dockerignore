@@ -1,0 +1,12 @@
+node_modules
+dist
+.git
+.gitignore
+.npm-cache
+*.log
+.DS_Store
+.vscode
+.idea
+README.md
+DEPLOYMENT.md
+CLAUDE.md

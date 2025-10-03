@@ -18,9 +18,11 @@ No environment variables needed - this is a static PWA.
 
 The Dockerfile will:
 1. Install dependencies
-2. Generate PWA icons (PNG files)
-3. Build the production bundle
+2. Copy source code (including pre-generated PNG icons from public/ folder)
+3. Build the production bundle with Vite
 4. Serve with Nginx
+
+**Note**: PNG icons are pre-generated and committed to the repo. If you need to regenerate them, open `public/generate-pwa-icons.html` in your browser and download the icons.
 
 ### Verification
 
