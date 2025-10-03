@@ -30,4 +30,4 @@ COPY --from=builder /app/dist ./dist
 EXPOSE 8080
 
 # Serve the static files on the PORT provided by Railway
-CMD serve -s dist -l ${PORT:-8080}
+CMD ["sh", "-c", "serve -s dist -p ${PORT:-8080}"]
