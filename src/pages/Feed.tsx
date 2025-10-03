@@ -1,7 +1,16 @@
 import { useState, useRef } from 'react';
 
+interface Entry {
+  date: string;
+  metric: string;
+  value: string;
+  time: string;
+  type: 'data' | 'photo' | 'voice';
+  imageUrl?: string;
+}
+
 export default function Feed() {
-  const [entries, setEntries] = useState([
+  const [entries, setEntries] = useState<Entry[]>([
     { date: '2024-10-02', metric: 'Weight', value: '150 lbs', time: '08:30 AM', type: 'data' },
     { date: '2024-10-01', metric: 'Pulse', value: '72 bpm', time: '07:15 AM', type: 'data' },
     { date: '2024-10-01', metric: 'Blood Pressure', value: '120/80 mmHg', time: '07:10 AM', type: 'data' },
@@ -17,7 +26,7 @@ export default function Feed() {
     const file = e.target.files?.[0];
     if (file) {
       const now = new Date();
-      const newEntry = {
+      const newEntry: Entry = {
         date: now.toISOString().split('T')[0],
         metric: 'Photo',
         value: file.name,
@@ -34,7 +43,7 @@ export default function Feed() {
       setIsRecording(false);
       // Stop recording logic would go here
       const now = new Date();
-      const newEntry = {
+      const newEntry: Entry = {
         date: now.toISOString().split('T')[0],
         metric: 'Voice Note',
         value: 'Audio recording',
