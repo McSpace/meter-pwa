@@ -40,11 +40,20 @@ The app will be available at `http://localhost:5173`
 
 ### Installing as PWA on iPhone
 
-1. Open the app in Safari browser
-2. Tap the Share button (square with arrow)
-3. Scroll down and tap "Add to Home Screen"
-4. The app icon will appear on your home screen
-5. Launch it like a native app with full-screen experience
+**Important: Use Safari, not Chrome!** Chrome on iOS doesn't support PWA installation.
+
+1. Open the app in **Safari** browser
+2. Wait for the teal banner at the top (appears after 3 seconds)
+3. Follow the instructions: Tap Share button (↑) → "Add to Home Screen"
+4. Or manually: Share → Scroll down → "Add to Home Screen"
+5. The app icon will appear on your home screen
+6. Launch it like a native app with full-screen experience
+
+**How to verify it's a PWA:**
+- ✅ Opens in full-screen (no Safari address bar)
+- ✅ Has the teal pie chart icon
+- ✅ Named "Health" (not "Health Dashboard")
+- ✅ Works offline after first load
 
 ## Tech Stack
 
