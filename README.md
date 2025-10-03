@@ -18,6 +18,9 @@ A Progressive Web App for tracking health metrics including weight, blood pressu
 ```bash
 # Install dependencies (use local cache if you have npm permission issues)
 npm install --cache .npm-cache
+
+# Generate PWA icons (PNG files for iOS)
+npm run generate-icons
 ```
 
 ### Development
@@ -34,6 +37,14 @@ npm run preview
 ```
 
 The app will be available at `http://localhost:5173`
+
+### Installing as PWA on iPhone
+
+1. Open the app in Safari browser
+2. Tap the Share button (square with arrow)
+3. Scroll down and tap "Add to Home Screen"
+4. The app icon will appear on your home screen
+5. Launch it like a native app with full-screen experience
 
 ## Tech Stack
 

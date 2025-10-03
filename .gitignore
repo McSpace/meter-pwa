@@ -28,3 +28,6 @@ dist-ssr
 
 # Build files
 generate-icons.html
+
+# Keep PWA icons
+!public/*.png

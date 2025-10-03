@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PWA Icon Generator</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #11211e; color: #fff; }
+        canvas { display: none; }
+        .download { display: inline-block; margin: 10px; padding: 10px 20px; background: #30e8c9; color: #000; text-decoration: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>PWA Icon Generator</h1>
+    <p>Click the buttons below to download icons:</p>
+    <div id="links"></div>
+
+    <canvas id="canvas512" width="512" height="512"></canvas>
+    <canvas id="canvas192" width="192" height="192"></canvas>
+    <canvas id="canvas180" width="180" height="180"></canvas>
+    <canvas id="canvas152" width="152" height="152"></canvas>
+    <canvas id="canvas120" width="120" height="120"></canvas>
+
+    <script>
+        function drawIcon(canvas, size) {
+            const ctx = canvas.getContext('2d');
+            const padding = size * 0.1;
+            const radius = size * 0.2;
+
+            // Background with rounded corners
+            ctx.fillStyle = '#11211e';
+            ctx.beginPath();
+            ctx.roundRect(0, 0, size, size, radius);
+            ctx.fill();
+
+            // Center point
+            const centerX = size / 2;
+            const centerY = size / 2;
+            const chartRadius = size * 0.3;
+
+            // Draw pie chart icon in primary color
+            ctx.fillStyle = '#30e8c9';
+
+            // Large pie slice (270 degrees from -90)
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.arc(centerX, centerY, chartRadius, -Math.PI/2, Math.PI, false);
+            ctx.lineTo(centerX, centerY);
+            ctx.fill();
+
+            // Small pie slice (60 degrees from -90)
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.arc(centerX, centerY, chartRadius, -Math.PI/2, -Math.PI/2 + Math.PI/3, false);
+            ctx.lineTo(centerX, centerY);
+            ctx.fill();
+        }
+
+        // Generate all sizes
+        const sizes = [
+            { id: 'canvas512', name: 'pwa-512x512.png', size: 512 },
+            { id: 'canvas192', name: 'pwa-192x192.png', size: 192 },
+            { id: 'canvas180', name: 'apple-touch-icon-180x180.png', size: 180 },
+            { id: 'canvas152', name: 'apple-touch-icon-152x152.png', size: 152 },
+            { id: 'canvas120', name: 'apple-touch-icon-120x120.png', size: 120 }
+        ];
+
+        const linksDiv = document.getElementById('links');
+
+        sizes.forEach(({ id, name, size }) => {
+            const canvas = document.getElementById(id);
+            drawIcon(canvas, size);
+
+            const link = document.createElement('a');
+            link.className = 'download';
+            link.download = name;
+            link.href = canvas.toDataURL('image/png');
+            link.textContent = `Download ${name}`;
+            linksDiv.appendChild(link);
+            linksDiv.appendChild(document.createElement('br'));
+        });
+    </script>
+</body>
+</html>
