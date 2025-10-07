@@ -1,66 +1,50 @@
 # Railway Deployment Instructions
 
-## Required Environment Variables
+## Environment Variables
 
-Set these in your Railway project settings (Variables tab):
+Set these in Railway project settings (Variables tab):
 
-### Supabase Configuration
 ```
 VITE_SUPABASE_URL=https://your-project-ref.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key-here
 ```
 
-Get these values from: Supabase Dashboard → Settings → API
+Get values from: Supabase Dashboard → Settings → API
 
-### App Configuration (Optional)
-```
-VITE_APP_NAME=Health Dashboard
-VITE_APP_URL=https://your-app.up.railway.app
-```
+## How It Works
 
-## Deployment Flow
+Railway uses **build-time environment variables**:
 
-1. **Build**: `npm ci && npm run build && cp railway-start.js dist/`
-   - Installs dependencies
-   - Runs TypeScript compilation
-   - Builds Vite app to `dist/` directory
-   - Copies Railway startup script to dist
+1. **Build**: `npm ci && npm run build`
+   - Vite replaces `import.meta.env.VITE_*` with actual values during build
+   - Outputs optimized static files to `dist/`
 
-2. **Start**: `cd dist && node railway-start.js`
-   - Changes to dist directory
-   - Generates `config.js` with runtime environment variables
-   - Injects `<script src="/config.js">` into `index.html`
-   - Starts serve on port 8080 with proper process management
+2. **Deploy**: `npx serve -s dist -p $PORT`
+   - Serves pre-built static files
+   - No runtime configuration needed
 
-## How Runtime Config Works
-
-- **Development**: Uses `import.meta.env` (Vite's built-in env vars)
-- **Production**: Uses `window.__ENV__` from injected `/config.js`
-
-The app checks both sources in `src/lib/supabase.ts`:
-```typescript
-const getEnv = (key: string) => {
-  if (typeof window !== 'undefined' && window.__ENV__) {
-    return window.__ENV__[key]
-  }
-  return import.meta.env[key]
-}
-```
-
-## Testing Locally
+## Local Development
 
 ```bash
-# Build
-npm run build
+# Create .env.local with your values
+cp .env.example .env.local
 
-# Start (will generate config.js and serve)
-npm start
-
-# Visit http://localhost:8080
+# Start dev server (uses .env.local)
+npm run dev
 ```
 
-## Troubleshooting
+## Production Testing
 
-- **Missing env vars**: Check Railway logs for the "GENERATING RUNTIME CONFIG" section
-- **404 on /config.js**: Make sure `npm start` (not `serve` directly) is used
-- **Empty window.__ENV__**: Ensure env vars are set in Railway project settings
+```bash
+# Build with production env vars
+npm run build
+
+# Serve locally
+npm start
+```
+
+## Notes
+
+- Env vars are embedded at build time
+- Changing env vars requires redeployment
+- Railway automatically rebuilds on git push
