@@ -3,7 +3,7 @@ import fs from 'fs'
 
 console.log('=== GENERATING RUNTIME CONFIG ===')
 console.log('VITE_SUPABASE_URL:', process.env.VITE_SUPABASE_URL ? '✅ SET' : '❌ MISSING')
-console.log('VITE_SUPABASE_ANON_KEY:', process.env.VITE_SUPABASE_ANON_KEY ? '✅ SET (length:', process.env.VITE_SUPABASE_ANON_KEY?.length + ')' : '❌ MISSING')
+console.log('VITE_SUPABASE_ANON_KEY:', process.env.VITE_SUPABASE_ANON_KEY ? `✅ SET (length: ${process.env.VITE_SUPABASE_ANON_KEY.length})` : '❌ MISSING')
 
 const config = {
   VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL,
@@ -23,4 +23,17 @@ const configJs = `window.__ENV__ = ${JSON.stringify(config, null, 2)};`
 fs.writeFileSync('dist/config.js', configJs)
 console.log('✅ Runtime config generated at dist/config.js')
 console.log('Config content preview:', JSON.stringify(config, null, 2))
+
+// Inject config.js script into dist/index.html
+const indexPath = 'dist/index.html'
+let html = fs.readFileSync(indexPath, 'utf-8')
+if (!html.includes('/config.js')) {
+  html = html.replace(
+    '</head>',
+    '  <script src="/config.js"></script>\n  </head>'
+  )
+  fs.writeFileSync(indexPath, html)
+  console.log('✅ Injected config.js script into dist/index.html')
+}
+
 console.log('=================================')
