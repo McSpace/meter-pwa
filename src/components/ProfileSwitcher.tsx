@@ -58,7 +58,7 @@ export default function ProfileSwitcher() {
   const showArrows = profiles.length > 1
 
   return (
-    <div className="flex items-center justify-center gap-3">
+    <div className="flex items-center justify-center gap-3 pt-10">
       {showArrows && (
         <button
           onClick={handlePrevious}
