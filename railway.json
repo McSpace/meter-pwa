@@ -5,7 +5,7 @@
     "buildCommand": "npm ci && npm run build && cp railway-start.js dist/"
   },
   "deploy": {
-    "startCommand": "cd dist && node railway-start.js",
+    "startCommand": "sh -c 'cd dist && node railway-start.js'",
     "healthcheckPath": "/",
     "healthcheckTimeout": 100,
     "restartPolicyType": "ON_FAILURE",
