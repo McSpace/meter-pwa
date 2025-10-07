@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { LineChart, Line, XAxis, ResponsiveContainer } from 'recharts';
 import ProfileSwitcher from '@/components/ProfileSwitcher';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -32,7 +32,7 @@ export default function Dashboard() {
   });
 
   // Transform metrics data for chart
-  const chartData = metrics.map((m, index) => ({
+  const chartData = metrics.map((m) => ({
     day: new Date(m.timestamp).toLocaleDateString('en-US', { weekday: 'short' }),
     value: parseFloat(m.value.toString()),
     date: m.timestamp,

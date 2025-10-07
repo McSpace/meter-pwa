@@ -84,7 +84,7 @@ export default function Feed() {
       await refetch();
 
       setPendingUploads(prev => prev.filter(u => u.id !== upload.id));
-      URL.revokeObjectURL(upload.previewUrl);
+      if (upload.previewUrl) URL.revokeObjectURL(upload.previewUrl);
     } catch (error: any) {
       setPendingUploads(prev => prev.map(u =>
         u.id === upload.id

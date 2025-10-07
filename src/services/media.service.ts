@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import type { Media, MediaWithUrls, MediaType } from '@/types/database'
+import type { MediaWithUrls, MediaType } from '@/types/database'
 
 interface UploadMediaData {
   profileId: string
