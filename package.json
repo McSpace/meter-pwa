@@ -10,7 +10,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "generate-icons": "node generate-pwa-icons.cjs",
-    "start": "serve -s dist -p 8080"
+    "start": "node generate-config.js && serve -s dist -p 8080"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.58.0",
