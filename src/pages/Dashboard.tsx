@@ -1,66 +1,53 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, ResponsiveContainer } from 'recharts';
+import ProfileSwitcher from '@/components/ProfileSwitcher';
+import { useProfile } from '@/contexts/ProfileContext';
+import { useMetrics } from '@/hooks/useMetrics';
+import type { MetricType } from '@/types/database';
 
-type MetricType = 'weight' | 'bloodPressure' | 'pulse';
 type TimePeriod = '1W' | '1M' | '1Y';
 
-const metricData = {
-  weight: {
-    '1W': [
-      { day: 'Mon', value: 152 },
-      { day: 'Tue', value: 154 },
-      { day: 'Wed', value: 151 },
-      { day: 'Thu', value: 153 },
-      { day: 'Fri', value: 150 },
-      { day: 'Sat', value: 149 },
-      { day: 'Sun', value: 150 },
-    ],
-    current: '150 lbs',
-    change: '-2%',
-    label: 'Weight'
-  },
-  bloodPressure: {
-    '1W': [
-      { day: 'Mon', value: 120 },
-      { day: 'Tue', value: 118 },
-      { day: 'Wed', value: 122 },
-      { day: 'Thu', value: 119 },
-      { day: 'Fri', value: 121 },
-      { day: 'Sat', value: 120 },
-      { day: 'Sun', value: 118 },
-    ],
-    current: '118/78 mmHg',
-    change: '+1%',
-    label: 'Blood Pressure'
-  },
-  pulse: {
-    '1W': [
-      { day: 'Mon', value: 72 },
-      { day: 'Tue', value: 75 },
-      { day: 'Wed', value: 70 },
-      { day: 'Thu', value: 73 },
-      { day: 'Fri', value: 71 },
-      { day: 'Sat', value: 69 },
-      { day: 'Sun', value: 70 },
-    ],
-    current: '70 bpm',
-    change: '-3%',
-    label: 'Pulse'
-  }
+const metricLabels = {
+  weight: 'Weight',
+  bloodPressure: 'Blood Pressure',
+  pulse: 'Pulse'
+};
+
+const metricUnits = {
+  weight: 'lbs',
+  bloodPressure: 'mmHg',
+  pulse: 'bpm'
 };
 
 export default function Dashboard() {
+  const { selectedProfile } = useProfile();
   const [selectedMetric, setSelectedMetric] = useState<MetricType>('weight');
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('1W');
 
-  const currentData = metricData[selectedMetric];
+  // Get metrics for selected profile and metric type
+  const { metrics, loading } = useMetrics({
+    profileId: selectedProfile?.id || null,
+    type: selectedMetric,
+    limit: timePeriod === '1W' ? 7 : timePeriod === '1M' ? 30 : 365,
+  });
+
+  // Transform metrics data for chart
+  const chartData = metrics.map((m, index) => ({
+    day: new Date(m.timestamp).toLocaleDateString('en-US', { weekday: 'short' }),
+    value: parseFloat(m.value.toString()),
+    date: m.timestamp,
+  })).reverse(); // Reverse to show oldest to newest
+
+  // Calculate current value and change
+  const current = metrics.length > 0 ? parseFloat(metrics[0].value.toString()) : 0;
+  const previous = metrics.length > 1 ? parseFloat(metrics[metrics.length - 1].value.toString()) : current;
+  const change = current - previous;
+  const changePercent = previous > 0 ? ((change / previous) * 100).toFixed(1) : '0';
 
   return (
     <>
       <header className="sticky top-0 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm z-10 p-4">
-        <h1 className="text-xl font-bold text-center text-foreground-light dark:text-foreground-dark">
-          Dashboard
-        </h1>
+        <ProfileSwitcher />
       </header>
 
       <div className="p-4 space-y-6">
@@ -84,79 +71,95 @@ export default function Dashboard() {
 
         {/* Metric Card */}
         <div className="bg-card-light dark:bg-card-dark p-4 rounded-xl">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-sm text-subtle-light dark:text-subtle-dark">
-                {currentData.label}
-              </p>
-              <p className="text-3xl font-bold text-foreground-light dark:text-foreground-dark mt-1">
-                {currentData.current}
-              </p>
-              <p className="text-sm text-subtle-light dark:text-subtle-dark mt-1">
-                {currentData.change} vs last week
-              </p>
+          {!selectedProfile ? (
+            <div className="text-center py-8 text-subtle-light dark:text-subtle-dark">
+              Please select or create a profile
             </div>
-            <div className="flex bg-background-light dark:bg-background-dark p-1 rounded-full text-sm">
-              <button
-                onClick={() => setTimePeriod('1W')}
-                className={`px-3 py-1 rounded-full transition-colors ${
-                  timePeriod === '1W'
-                    ? 'bg-primary text-black'
-                    : 'text-subtle-light dark:text-subtle-dark'
-                }`}
-              >
-                1W
-              </button>
-              <button
-                onClick={() => setTimePeriod('1M')}
-                className={`px-3 py-1 rounded-full transition-colors ${
-                  timePeriod === '1M'
-                    ? 'bg-primary text-black'
-                    : 'text-subtle-light dark:text-subtle-dark'
-                }`}
-              >
-                1M
-              </button>
-              <button
-                onClick={() => setTimePeriod('1Y')}
-                className={`px-3 py-1 rounded-full transition-colors ${
-                  timePeriod === '1Y'
-                    ? 'bg-primary text-black'
-                    : 'text-subtle-light dark:text-subtle-dark'
-                }`}
-              >
-                1Y
-              </button>
+          ) : loading ? (
+            <div className="text-center py-8">
+              <div className="w-8 h-8 mx-auto border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
             </div>
-          </div>
+          ) : metrics.length === 0 ? (
+            <div className="text-center py-8 text-subtle-light dark:text-subtle-dark">
+              No {metricLabels[selectedMetric].toLowerCase()} data yet
+            </div>
+          ) : (
+            <>
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm text-subtle-light dark:text-subtle-dark">
+                    {metricLabels[selectedMetric]}
+                  </p>
+                  <p className="text-3xl font-bold text-foreground-light dark:text-foreground-dark mt-1">
+                    {current} {metricUnits[selectedMetric]}
+                  </p>
+                  <p className="text-sm text-subtle-light dark:text-subtle-dark mt-1">
+                    {changePercent > '0' ? '+' : ''}{changePercent}% vs {timePeriod === '1W' ? 'last week' : timePeriod === '1M' ? 'last month' : 'last year'}
+                  </p>
+                </div>
+                <div className="flex bg-background-light dark:bg-background-dark p-1 rounded-full text-sm">
+                  <button
+                    onClick={() => setTimePeriod('1W')}
+                    className={`px-3 py-1 rounded-full transition-colors ${
+                      timePeriod === '1W'
+                        ? 'bg-primary text-black'
+                        : 'text-subtle-light dark:text-subtle-dark'
+                    }`}
+                  >
+                    1W
+                  </button>
+                  <button
+                    onClick={() => setTimePeriod('1M')}
+                    className={`px-3 py-1 rounded-full transition-colors ${
+                      timePeriod === '1M'
+                        ? 'bg-primary text-black'
+                        : 'text-subtle-light dark:text-subtle-dark'
+                    }`}
+                  >
+                    1M
+                  </button>
+                  <button
+                    onClick={() => setTimePeriod('1Y')}
+                    className={`px-3 py-1 rounded-full transition-colors ${
+                      timePeriod === '1Y'
+                        ? 'bg-primary text-black'
+                        : 'text-subtle-light dark:text-subtle-dark'
+                    }`}
+                  >
+                    1Y
+                  </button>
+                </div>
+              </div>
 
-          {/* Chart */}
-          <div className="mt-4 h-48">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={currentData['1W']}>
-                <defs>
-                  <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#30e8c9" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#30e8c9" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <XAxis
-                  dataKey="day"
-                  tick={{ fill: '#6b7280', fontSize: 12 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="value"
-                  stroke="#30e8c9"
-                  strokeWidth={3}
-                  dot={false}
-                  fill="url(#colorValue)"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+              {/* Chart */}
+              <div className="mt-4 h-48">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData}>
+                    <defs>
+                      <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#30e8c9" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#30e8c9" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <XAxis
+                      dataKey="day"
+                      tick={{ fill: '#6b7280', fontSize: 12 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="value"
+                      stroke="#30e8c9"
+                      strokeWidth={3}
+                      dot={false}
+                      fill="url(#colorValue)"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </>

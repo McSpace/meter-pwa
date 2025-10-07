@@ -13,6 +13,7 @@
     "start": "serve -s dist -p 8080"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.58.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "serve": "^14.2.5"

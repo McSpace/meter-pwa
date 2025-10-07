@@ -1,9 +1,14 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { AuthProvider } from './contexts/AuthContext';
+import { ProfileProvider } from './contexts/ProfileContext';
+import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Feed from './pages/Feed';
 import Settings from './pages/Settings';
+import Login from './pages/Login';
+import AuthCallback from './pages/AuthCallback';
 import InstallPrompt from './components/InstallPrompt';
 
 function App() {
@@ -30,16 +35,53 @@ function App() {
   }, [darkMode]);
 
   return (
-    <Router>
-      <InstallPrompt />
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/feed" element={<Feed />} />
-          <Route path="/settings" element={<Settings darkMode={darkMode} setDarkMode={setDarkMode} />} />
-        </Routes>
-      </Layout>
-    </Router>
+    <AuthProvider>
+      <ProfileProvider>
+        <Router>
+          <InstallPrompt />
+          <Routes>
+            {/* Public routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
+
+            {/* Protected routes */}
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Dashboard />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/feed"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Feed />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Settings darkMode={darkMode} setDarkMode={setDarkMode} />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Catch all */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Router>
+      </ProfileProvider>
+    </AuthProvider>
   );
 }
 
