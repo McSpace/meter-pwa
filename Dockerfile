@@ -40,14 +40,14 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Install a tiny static file server
-RUN npm install -g serve
-
 # Copy the pre-built static assets from the builder stage
 COPY --from=builder /app/dist ./dist
+
+# Copy the lightweight static server used by the project
+COPY --from=builder /app/serve.js ./serve.js
 
 # Expose the default port used by the app
 EXPOSE 8080
 
 # Allow overriding the port through the PORT environment variable
-CMD ["sh", "-c", "serve -s dist -l tcp://0.0.0.0:${PORT:-8080}"]
+CMD ["node", "./serve.js"]
