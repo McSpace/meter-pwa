@@ -154,7 +154,7 @@ export default function Feed() {
   if (!selectedProfile) {
     return (
       <>
-        <header className="sticky top-0 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm z-10 px-4 pb-4" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
+        <header className="sticky top-0 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm z-10 px-4 pb-4" style={{ paddingTop: 'calc(env(safe-area-inset-top, 1rem) + 2rem)' }}>
           <ProfileSwitcher />
         </header>
         <div className="flex items-center justify-center h-64 text-subtle-light dark:text-subtle-dark">
@@ -166,7 +166,7 @@ export default function Feed() {
 
   return (
     <>
-      <header className="sticky top-0 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm z-10 px-4 pb-4" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
+      <header className="sticky top-0 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm z-10 px-4 pb-4" style={{ paddingTop: 'calc(env(safe-area-inset-top, 1rem) + 2rem)' }}>
         <ProfileSwitcher />
       </header>
 
