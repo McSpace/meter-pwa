@@ -1,33 +1,53 @@
-# Build stage
+# syntax=docker/dockerfile:1.4
+
+############################################################
+#  Builder stage
+############################################################
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Build-time configuration for the Vite application
+# These will be provided by Railway environment variables
+ARG VITE_APP_NAME
+ARG VITE_APP_URL
+ARG VITE_SUPABASE_ANON_KEY
+ARG VITE_SUPABASE_URL
 
-# Install dependencies
+# Expose build arguments to the Vite build
+ENV \
+  VITE_APP_NAME="${VITE_APP_NAME}" \
+  VITE_APP_URL="${VITE_APP_URL}" \
+  VITE_SUPABASE_ANON_KEY="${VITE_SUPABASE_ANON_KEY}" \
+  VITE_SUPABASE_URL="${VITE_SUPABASE_URL}"
+
+# Install dependencies using the lockfile for reproducible builds
+COPY package*.json ./
 RUN npm ci
 
-# Copy source code (including pre-generated PNG icons)
+# Copy the rest of the application source
 COPY . .
 
-# Build the app
+# Build the static assets
 RUN npm run build
 
-# Production stage - use serve to host static files
-FROM node:20-alpine
+############################################################
+#  Runtime stage
+############################################################
+FROM node:20-alpine AS runtime
 
 WORKDIR /app
 
-# Install serve globally
-RUN npm install -g serve
+ENV NODE_ENV=production
 
-# Copy built files from builder
+# Copy the pre-built static assets from the builder stage
 COPY --from=builder /app/dist ./dist
 
-# Railway sets PORT env variable
+# Copy the lightweight static server used by the project
+COPY --from=builder /app/serve.js ./serve.js
+
+# Expose the default port used by the app
 EXPOSE 8080
 
-# Serve the static files on port 8080
-CMD ["serve", "-s", "dist", "-p", "8080"]
+# Allow overriding the port through the PORT environment variable
+CMD ["node", "./serve.js"]
