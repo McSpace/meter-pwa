@@ -20,15 +20,17 @@ VITE_APP_URL=https://your-app.up.railway.app
 
 ## Deployment Flow
 
-1. **Build**: `npm ci && npm run build`
+1. **Build**: `npm ci && npm run build && cp railway-start.js dist/`
+   - Installs dependencies
    - Runs TypeScript compilation
-   - Builds Vite app
-   - Outputs to `dist/` directory
+   - Builds Vite app to `dist/` directory
+   - Copies Railway startup script to dist
 
-2. **Start**: `npm start`
-   - Generates `dist/config.js` with runtime environment variables
-   - Injects `<script src="/config.js">` into `dist/index.html`
-   - Serves static files with `serve` on port 8080
+2. **Start**: `cd dist && node railway-start.js`
+   - Changes to dist directory
+   - Generates `config.js` with runtime environment variables
+   - Injects `<script src="/config.js">` into `index.html`
+   - Starts serve on port 8080 with proper process management
 
 ## How Runtime Config Works
 
