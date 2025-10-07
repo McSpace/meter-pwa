@@ -6,7 +6,7 @@
   "description": "Progressive Web App for tracking health metrics",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "node vite-env-debug.js && tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "generate-icons": "node generate-pwa-icons.cjs",
