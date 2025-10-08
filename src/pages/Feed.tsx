@@ -27,6 +27,18 @@ export default function Feed() {
   const feedContainerRef = useRef<HTMLDivElement>(null);
   const { isRecording, duration, startRecording, stopRecording, error: recordingError } = useAudioRecorder();
 
+  // Listen for analysis completion events
+  useEffect(() => {
+    const handleAnalysisCompleted = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      console.log('[Feed] Analysis completed:', customEvent.detail);
+      refetch();
+    };
+
+    window.addEventListener('media-analysis-completed', handleAnalysisCompleted);
+    return () => window.removeEventListener('media-analysis-completed', handleAnalysisCompleted);
+  }, [refetch]);
+
   // Pull-to-refresh functionality
   useEffect(() => {
     const container = feedContainerRef.current;

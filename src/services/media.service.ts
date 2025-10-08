@@ -271,6 +271,10 @@ async function analyzePhotoAndExtractMetrics(
         analysis_error: null,
       })
       .eq('id', mediaId)
+    // Dispatch custom event to notify UI
+    window.dispatchEvent(new CustomEvent('media-analysis-completed', {
+      detail: { mediaId, success: true }
+    }))
   } catch (error: any) {
     console.error('AI analysis error:', error)
 
@@ -282,6 +286,11 @@ async function analyzePhotoAndExtractMetrics(
         analysis_error: error.message || 'Unknown error',
       })
       .eq('id', mediaId)
+
+    // Dispatch custom event to notify UI
+    window.dispatchEvent(new CustomEvent('media-analysis-completed', {
+      detail: { mediaId, success: false, error: error.message }
+    }))
   }
 }
 
@@ -326,6 +335,10 @@ async function analyzeAudioAndExtractMetrics(
         analysis_error: null,
       })
       .eq('id', mediaId)
+    // Dispatch custom event to notify UI
+    window.dispatchEvent(new CustomEvent('media-analysis-completed', {
+      detail: { mediaId, success: true }
+    }))
   } catch (error: any) {
     console.error('AI audio analysis error:', error)
 
@@ -337,6 +350,11 @@ async function analyzeAudioAndExtractMetrics(
         analysis_error: error.message || 'Unknown error',
       })
       .eq('id', mediaId)
+
+    // Dispatch custom event to notify UI
+    window.dispatchEvent(new CustomEvent('media-analysis-completed', {
+      detail: { mediaId, success: false, error: error.message }
+    }))
   }
 }
 
