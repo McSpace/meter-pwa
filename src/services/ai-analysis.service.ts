@@ -7,7 +7,22 @@ if (!API_URL) {
 }
 
 // Derive audio analysis URL from image analysis URL
-const AUDIO_API_URL = API_URL?.replace('/analizeimage', '/analizeaudio')
+// If API_URL ends with /analizeimage, replace it with /analizeaudio
+// Otherwise, just append /analizeaudio to the base URL
+const AUDIO_API_URL = API_URL
+  ? API_URL.includes('/analizeimage')
+    ? API_URL.replace('/analizeimage', '/analizeaudio')
+    : API_URL.replace(/\/[^/]*$/, '/analizeaudio') // Replace last segment
+  : undefined
+
+// Log URLs for debugging
+if (typeof window !== 'undefined') {
+  console.log('AI Analysis URLs:', {
+    imageUrl: API_URL,
+    audioUrl: AUDIO_API_URL,
+    env: import.meta.env.VITE_AI_ANALYSIS_API_URL
+  })
+}
 
 /**
  * Analyzes an image URL and extracts health metrics
