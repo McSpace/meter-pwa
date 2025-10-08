@@ -49,11 +49,14 @@ export function useMedia(options: UseMediaOptions) {
           table: 'media',
           filter: `profile_id=eq.${options.profileId}`,
         },
-        () => {
+        (payload) => {
+          console.log('[useMedia] Received change:', payload)
           fetchMedia()
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        console.log('[useMedia] Subscription status:', status)
+      })
 
     return () => {
       subscription.unsubscribe()

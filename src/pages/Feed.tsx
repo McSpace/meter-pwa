@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import ProfileSwitcher from '@/components/ProfileSwitcher';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useFeedEntries, metricLabels } from '@/hooks/useFeedEntries';
@@ -20,8 +20,64 @@ export default function Feed() {
   const { entries, loading, refetch } = useFeedEntries(selectedProfile?.id || null);
   const [pendingUploads, setPendingUploads] = useState<PendingUpload[]>([]);
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [pullStartY, setPullStartY] = useState<number | null>(null);
+  const [pullDistance, setPullDistance] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const feedContainerRef = useRef<HTMLDivElement>(null);
   const { isRecording, duration, startRecording, stopRecording, error: recordingError } = useAudioRecorder();
+
+  // Pull-to-refresh functionality
+  useEffect(() => {
+    const container = feedContainerRef.current;
+    if (!container) return;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      // Only start pull if we're at the top of the scroll
+      if (container.scrollTop === 0) {
+        setPullStartY(e.touches[0].clientY);
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (pullStartY === null || container.scrollTop > 0) return;
+
+      const currentY = e.touches[0].clientY;
+      const distance = currentY - pullStartY;
+
+      // Only allow pulling down (positive distance)
+      if (distance > 0) {
+        setPullDistance(Math.min(distance, 150)); // Max 150px
+        // Prevent default scroll when pulling
+        if (distance > 10) {
+          e.preventDefault();
+        }
+      }
+    };
+
+    const handleTouchEnd = async () => {
+      if (pullDistance > 80) {
+        // Trigger refresh if pulled more than 80px
+        setIsRefreshing(true);
+        await refetch();
+        setTimeout(() => {
+          setIsRefreshing(false);
+        }, 500);
+      }
+      setPullStartY(null);
+      setPullDistance(0);
+    };
+
+    container.addEventListener('touchstart', handleTouchStart, { passive: true });
+    container.addEventListener('touchmove', handleTouchMove, { passive: false });
+    container.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+    return () => {
+      container.removeEventListener('touchstart', handleTouchStart);
+      container.removeEventListener('touchmove', handleTouchMove);
+      container.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [pullStartY, pullDistance, refetch]);
 
   const handlePhotoCapture = () => {
     fileInputRef.current?.click();
@@ -51,10 +107,12 @@ export default function Feed() {
         type: 'photo',
       });
 
-      // Refetch entries to show the new photo
+      // Wait a bit for DB to update, then refetch
+      await new Promise(resolve => setTimeout(resolve, 500));
       await refetch();
 
-      // Remove from pending
+      // Wait another bit for data to appear in feed before removing pending
+      await new Promise(resolve => setTimeout(resolve, 500));
       setPendingUploads(prev => prev.filter(u => u.id !== uploadId));
       URL.revokeObjectURL(previewUrl);
     } catch (error: any) {
@@ -81,8 +139,10 @@ export default function Feed() {
         type: 'photo',
       });
 
-      // Refetch entries
+      // Wait for DB and refetch
+      await new Promise(resolve => setTimeout(resolve, 500));
       await refetch();
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       setPendingUploads(prev => prev.filter(u => u.id !== upload.id));
       if (upload.previewUrl) URL.revokeObjectURL(upload.previewUrl);
@@ -134,10 +194,12 @@ export default function Feed() {
           type: 'voice',
         });
 
-        // Refetch entries
+        // Wait for DB to update, then refetch
+        await new Promise(resolve => setTimeout(resolve, 500));
         await refetch();
 
-        // Remove from pending
+        // Wait for data to appear in feed before removing pending
+        await new Promise(resolve => setTimeout(resolve, 500));
         setPendingUploads(prev => prev.filter(u => u.id !== uploadId));
       } catch (error: any) {
         setPendingUploads(prev => prev.map(u =>
@@ -176,7 +238,32 @@ export default function Feed() {
   }
 
   return (
-    <>
+    <div
+      ref={feedContainerRef}
+      className="overflow-y-auto h-screen"
+      style={{
+        WebkitOverflowScrolling: 'touch',
+        transform: pullDistance > 0 ? `translateY(${pullDistance * 0.5}px)` : 'none',
+        transition: pullStartY === null ? 'transform 0.3s ease-out' : 'none'
+      }}
+    >
+      {/* Pull-to-refresh indicator */}
+      {pullDistance > 0 && (
+        <div
+          className="absolute top-0 left-0 right-0 flex items-center justify-center"
+          style={{
+            height: `${pullDistance}px`,
+            opacity: Math.min(pullDistance / 80, 1)
+          }}
+        >
+          <div className={`${isRefreshing || pullDistance > 80 ? 'animate-spin' : ''}`}>
+            <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </div>
+        </div>
+      )}
+
       <header className="sticky top-0 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm z-10 p-4">
         <ProfileSwitcher />
       </header>
@@ -542,6 +629,6 @@ export default function Feed() {
         onChange={handleFileSelect}
         className="hidden"
       />
-    </>
+    </div>
   );
 }
