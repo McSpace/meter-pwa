@@ -1,4 +1,4 @@
-import type { ImageAnalysisResult, DetectedMeasurement, MetricType } from '@/types/database'
+import type { ImageAnalysisResult, DetectedMeasurement } from '@/types/database'
 
 const API_URL = import.meta.env.VITE_AI_ANALYSIS_API_URL
 

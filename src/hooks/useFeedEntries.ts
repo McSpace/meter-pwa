@@ -11,7 +11,7 @@ export interface FeedEntry {
   time: string
 
   // For metrics
-  metricType?: 'weight' | 'bloodPressure' | 'pulse'
+  metricType?: string  // Changed from strict union to string for dynamic types
   value?: string
   unit?: string
 
