@@ -19,15 +19,25 @@ export interface FeedEntry {
   mediaType?: 'photo' | 'voice'
   mediaUrl?: string
   thumbnailUrl?: string
+  analysisStatus?: 'pending' | 'analyzing' | 'completed' | 'failed' | 'not_applicable'
+  analysisError?: string | null
+  detectedMetrics?: Array<{
+    type: string
+    value: string
+    unit: string
+  }>
 
   // Common
   notes?: string | null
 }
 
-const metricLabels = {
+const metricLabels: Record<string, string> = {
   weight: 'Weight',
   bloodPressure: 'Blood Pressure',
-  pulse: 'Pulse'
+  systolicPressure: 'Systolic Pressure',
+  diastolicPressure: 'Diastolic Pressure',
+  pulse: 'Pulse',
+  temperature: 'Temperature',
 }
 
 export function useFeedEntries(profileId: string | null) {
@@ -44,8 +54,13 @@ export function useFeedEntries(profileId: string | null) {
   const entries = useMemo(() => {
     const combined: FeedEntry[] = []
 
-    // Add metrics
+    // Add metrics (exclude those extracted from media)
     metrics.forEach((metric: Metric) => {
+      // Skip metrics that were auto-extracted from photos/audio
+      if (metric.media_id) {
+        return
+      }
+
       const date = new Date(metric.timestamp)
       combined.push({
         id: metric.id,
@@ -70,6 +85,16 @@ export function useFeedEntries(profileId: string | null) {
     // Add media
     media.forEach((item: MediaWithUrls) => {
       const date = new Date(item.timestamp)
+
+      // Find metrics extracted from this photo
+      const detectedMetrics = metrics
+        .filter((m: Metric) => m.media_id === item.id)
+        .map((m: Metric) => ({
+          type: metricLabels[m.type] || m.type.charAt(0).toUpperCase() + m.type.slice(1),
+          value: m.value.toString(),
+          unit: m.unit,
+        }))
+
       combined.push({
         id: item.id,
         type: 'media',
@@ -86,6 +111,9 @@ export function useFeedEntries(profileId: string | null) {
         mediaType: item.type,
         mediaUrl: item.url,
         thumbnailUrl: item.thumbnail_url,
+        analysisStatus: item.analysis_status,
+        analysisError: item.analysis_error,
+        detectedMetrics: detectedMetrics.length > 0 ? detectedMetrics : undefined,
         notes: item.notes,
       })
     })

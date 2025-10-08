@@ -19,6 +19,7 @@ export default function Feed() {
   const { selectedProfile } = useProfile();
   const { entries, loading, refetch } = useFeedEntries(selectedProfile?.id || null);
   const [pendingUploads, setPendingUploads] = useState<PendingUpload[]>([]);
+  const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { isRecording, duration, startRecording, stopRecording, error: recordingError } = useAudioRecorder();
 
@@ -151,6 +152,16 @@ export default function Feed() {
     }
   };
 
+  const handleRetryAnalysis = async (mediaId: string) => {
+    try {
+      await mediaService.retryAnalysis(mediaId);
+      // Refetch to get updated status
+      await refetch();
+    } catch (error: any) {
+      console.error('Retry analysis failed:', error);
+    }
+  };
+
   if (!selectedProfile) {
     return (
       <>
@@ -203,22 +214,26 @@ export default function Feed() {
         {pendingUploads.map((upload) => (
           <div
             key={upload.id}
-            className="bg-card-light dark:bg-card-dark p-4 rounded-lg border border-border-light dark:border-border-dark"
+            className={`bg-card-light dark:bg-card-dark p-4 rounded-lg border-2 transition-colors ${
+              upload.status === 'uploading'
+                ? 'border-primary animate-pulse'
+                : 'border-border-light dark:border-border-dark'
+            }`}
           >
             <div className="flex justify-between items-start">
               <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm text-subtle-light dark:text-subtle-dark">
+                <div className="flex items-center gap-2 mb-2">
+                  <p className="text-sm font-medium text-foreground-light dark:text-foreground-dark">
                     {upload.type === 'photo' ? 'Photo' : 'Voice Note'}
                   </p>
                   {upload.status === 'uploading' && (
                     <>
-                      <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                      <span className="text-xs text-primary">Uploading...</span>
+                      <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                      <span className="text-sm font-medium text-primary">Uploading & Analyzing...</span>
                     </>
                   )}
                   {upload.status === 'error' && (
-                    <span className="text-xs text-red-500">Failed</span>
+                    <span className="text-sm font-medium text-red-500">Failed</span>
                   )}
                 </div>
                 {upload.type === 'photo' && upload.previewUrl && (
@@ -281,28 +296,185 @@ export default function Feed() {
                 {entry.type === 'media' && entry.mediaType === 'photo' && (
                   <>
                     <p className="text-sm text-subtle-light dark:text-subtle-dark">Photo</p>
-                    <img
-                      src={entry.thumbnailUrl || entry.mediaUrl}
-                      alt="Photo"
-                      className="mt-3 rounded-lg max-w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
-                      onClick={() => window.open(entry.mediaUrl, '_blank')}
-                    />
+                    <div className="mt-3 flex gap-4">
+                      <div className="relative flex-shrink-0">
+                        <img
+                          src={entry.thumbnailUrl || entry.mediaUrl}
+                          alt="Photo"
+                          className={`rounded-lg max-w-[200px] h-auto cursor-pointer transition-opacity ${
+                            entry.analysisStatus === 'analyzing' ? 'opacity-75' : 'hover:opacity-90'
+                          }`}
+                          onClick={() => window.open(entry.mediaUrl, '_blank')}
+                        />
+                        {entry.analysisStatus === 'analyzing' && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="bg-black/60 rounded-full p-3">
+                              <div className="w-6 h-6 border-3 border-primary border-t-transparent rounded-full animate-spin"></div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* AI Analysis Results */}
+                      <div className="flex-1 min-w-0">
+                        {entry.analysisStatus === 'analyzing' && (
+                          <div className="flex items-center gap-2 text-primary">
+                            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                            <span className="text-sm font-medium">Analyzing...</span>
+                          </div>
+                        )}
+
+                        {entry.analysisStatus === 'completed' && entry.detectedMetrics && entry.detectedMetrics.length > 0 && (
+                          <div className="space-y-2">
+                            <p className="text-xs text-subtle-light dark:text-subtle-dark flex items-center gap-1">
+                              <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                              Detected:
+                            </p>
+                            {entry.detectedMetrics.map((metric, idx) => (
+                              <div key={idx} className="bg-background-light dark:bg-background-dark rounded-lg p-2">
+                                <p className="text-xs text-subtle-light dark:text-subtle-dark">{metric.type}</p>
+                                <p className="text-lg font-bold text-foreground-light dark:text-foreground-dark">
+                                  {metric.value} {metric.unit}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {entry.analysisStatus === 'completed' && (!entry.detectedMetrics || entry.detectedMetrics.length === 0) && (
+                          <p className="text-xs text-subtle-light dark:text-subtle-dark">No metrics detected</p>
+                        )}
+
+                        {entry.analysisStatus === 'failed' && (
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-1 text-red-500">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                              <span className="text-xs">Analysis failed</span>
+                            </div>
+                            {entry.analysisError && (
+                              <p className="text-xs text-red-500">{entry.analysisError}</p>
+                            )}
+                            <button
+                              onClick={() => handleRetryAnalysis(entry.id)}
+                              className="text-xs text-primary hover:text-primary/80 underline"
+                            >
+                              Retry
+                            </button>
+                          </div>
+                        )}
+
+                        {entry.analysisStatus === 'pending' && (
+                          <p className="text-xs text-subtle-light dark:text-subtle-dark">Waiting for analysis...</p>
+                        )}
+                      </div>
+                    </div>
                   </>
                 )}
                 {entry.type === 'media' && entry.mediaType === 'voice' && (
                   <>
                     <p className="text-sm text-subtle-light dark:text-subtle-dark">Voice Note</p>
-                    {entry.mediaUrl && (
-                      <audio
-                        controls
-                        className="mt-3 w-full max-w-md"
-                        preload="metadata"
-                      >
-                        <source src={entry.mediaUrl} type="audio/webm" />
-                        <source src={entry.mediaUrl} type="audio/mp4" />
-                        Your browser does not support audio playback.
-                      </audio>
-                    )}
+                    <div className="mt-3 flex gap-4">
+                      {/* Compact Audio Player */}
+                      {entry.mediaUrl && (
+                        <div className="flex-shrink-0">
+                          <audio
+                            id={`audio-${entry.id}`}
+                            preload="metadata"
+                            className="hidden"
+                            onEnded={() => setPlayingAudioId(null)}
+                            onPause={() => setPlayingAudioId(null)}
+                            onPlay={() => setPlayingAudioId(entry.id)}
+                          >
+                            <source src={entry.mediaUrl} type="audio/webm" />
+                            <source src={entry.mediaUrl} type="audio/mp4" />
+                          </audio>
+                          <button
+                            onClick={() => {
+                              const audio = document.getElementById(`audio-${entry.id}`) as HTMLAudioElement;
+                              if (audio.paused) {
+                                audio.play();
+                              } else {
+                                audio.pause();
+                              }
+                            }}
+                            className="w-12 h-12 rounded-full bg-primary text-black flex items-center justify-center hover:scale-105 transition-transform"
+                          >
+                            {playingAudioId === entry.id ? (
+                              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                              </svg>
+                            ) : (
+                              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z"/>
+                              </svg>
+                            )}
+                          </button>
+                        </div>
+                      )}
+
+                      {/* AI Analysis Results */}
+                      <div className="flex-1 min-w-0">
+                        {entry.analysisStatus === 'analyzing' && (
+                          <div className="flex items-center gap-2 text-primary">
+                            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                            <span className="text-sm">Analyzing audio...</span>
+                          </div>
+                        )}
+
+                        {entry.analysisStatus === 'completed' && entry.detectedMetrics && entry.detectedMetrics.length > 0 && (
+                          <div className="space-y-2">
+                            <p className="text-xs text-subtle-light dark:text-subtle-dark flex items-center gap-1">
+                              <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                              Detected:
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {entry.detectedMetrics.map((metric, idx) => (
+                                <div key={idx} className="bg-background-light dark:bg-background-dark rounded-lg p-2">
+                                  <p className="text-xs text-subtle-light dark:text-subtle-dark">{metric.type}</p>
+                                  <p className="text-lg font-bold text-foreground-light dark:text-foreground-dark">
+                                    {metric.value} {metric.unit}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {entry.analysisStatus === 'completed' && (!entry.detectedMetrics || entry.detectedMetrics.length === 0) && (
+                          <p className="text-xs text-subtle-light dark:text-subtle-dark">No metrics detected</p>
+                        )}
+
+                        {entry.analysisStatus === 'failed' && (
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-1 text-red-500">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                              <span className="text-xs">Analysis failed</span>
+                            </div>
+                            {entry.analysisError && (
+                              <p className="text-xs text-red-500">{entry.analysisError}</p>
+                            )}
+                            <button
+                              onClick={() => handleRetryAnalysis(entry.id)}
+                              className="text-xs text-primary hover:text-primary/80 underline"
+                            >
+                              Retry
+                            </button>
+                          </div>
+                        )}
+
+                        {entry.analysisStatus === 'pending' && (
+                          <p className="text-xs text-subtle-light dark:text-subtle-dark">Waiting for analysis...</p>
+                        )}
+                      </div>
+                    </div>
                   </>
                 )}
                 {entry.notes && (

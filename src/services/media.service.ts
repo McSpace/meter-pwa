@@ -1,5 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import type { MediaWithUrls, MediaType } from '@/types/database'
+import * as aiAnalysisService from './ai-analysis.service'
+import * as metricService from './metric.service'
 
 interface UploadMediaData {
   profileId: string
@@ -81,17 +83,29 @@ export async function uploadMedia(data: UploadMediaData): Promise<MediaWithUrls>
       duration,
       timestamp,
       notes: data.notes,
+      analysis_status: (data.type === 'photo' || data.type === 'voice') ? 'pending' : 'not_applicable',
     })
     .select()
     .single()
 
   if (dbError) throw dbError
 
-  return {
+  const result: MediaWithUrls = {
     ...media,
     url: publicUrl,
     thumbnail_url: thumbnailUrl,
   }
+
+  // Trigger AI analysis for photos and audio (async, don't wait)
+  if (data.type === 'photo') {
+    analyzePhotoAndExtractMetrics(media.id, publicUrl, data.profileId, timestamp)
+      .catch(err => console.error('AI photo analysis failed:', err))
+  } else if (data.type === 'voice') {
+    analyzeAudioAndExtractMetrics(media.id, publicUrl, data.profileId, timestamp)
+      .catch(err => console.error('AI audio analysis failed:', err))
+  }
+
+  return result
 }
 
 export async function getMedia(
@@ -214,4 +228,155 @@ async function getAudioDuration(blob: Blob): Promise<number> {
     audio.onerror = () => resolve(0)
     audio.src = URL.createObjectURL(blob)
   })
+}
+
+// Analyze photo and extract metrics
+async function analyzePhotoAndExtractMetrics(
+  mediaId: string,
+  imageUrl: string,
+  profileId: string,
+  timestamp: string
+): Promise<void> {
+  try {
+    // Update status to analyzing
+    await supabase
+      .from('media')
+      .update({ analysis_status: 'analyzing' })
+      .eq('id', mediaId)
+
+    // Call AI analysis API
+    const analysisResult = await aiAnalysisService.analyzeImage(imageUrl)
+
+    // Convert measurements to metrics
+    const metricsData = aiAnalysisService.convertMeasurementsToMetrics(
+      analysisResult.measurements,
+      profileId,
+      mediaId,
+      timestamp,
+      'photo'
+    )
+
+    // Save metrics to database
+    if (metricsData.length > 0) {
+      await Promise.all(
+        metricsData.map(metricData => metricService.createMetric(metricData))
+      )
+    }
+
+    // Update status to completed
+    await supabase
+      .from('media')
+      .update({
+        analysis_status: 'completed',
+        analysis_error: null,
+      })
+      .eq('id', mediaId)
+  } catch (error: any) {
+    console.error('AI analysis error:', error)
+
+    // Update status to failed with error message
+    await supabase
+      .from('media')
+      .update({
+        analysis_status: 'failed',
+        analysis_error: error.message || 'Unknown error',
+      })
+      .eq('id', mediaId)
+  }
+}
+
+// Analyze audio and extract metrics
+async function analyzeAudioAndExtractMetrics(
+  mediaId: string,
+  audioUrl: string,
+  profileId: string,
+  timestamp: string
+): Promise<void> {
+  try {
+    // Update status to analyzing
+    await supabase
+      .from('media')
+      .update({ analysis_status: 'analyzing' })
+      .eq('id', mediaId)
+
+    // Call AI analysis API
+    const analysisResult = await aiAnalysisService.analyzeAudio(audioUrl)
+
+    // Convert measurements to metrics
+    const metricsData = aiAnalysisService.convertMeasurementsToMetrics(
+      analysisResult.measurements,
+      profileId,
+      mediaId,
+      timestamp,
+      'audio'
+    )
+
+    // Save metrics to database
+    if (metricsData.length > 0) {
+      await Promise.all(
+        metricsData.map(metricData => metricService.createMetric(metricData))
+      )
+    }
+
+    // Update status to completed
+    await supabase
+      .from('media')
+      .update({
+        analysis_status: 'completed',
+        analysis_error: null,
+      })
+      .eq('id', mediaId)
+  } catch (error: any) {
+    console.error('AI audio analysis error:', error)
+
+    // Update status to failed with error message
+    await supabase
+      .from('media')
+      .update({
+        analysis_status: 'failed',
+        analysis_error: error.message || 'Unknown error',
+      })
+      .eq('id', mediaId)
+  }
+}
+
+// Retry failed analysis
+export async function retryAnalysis(mediaId: string): Promise<void> {
+  // Get media info
+  const { data: media, error } = await supabase
+    .from('media')
+    .select('*')
+    .eq('id', mediaId)
+    .single()
+
+  if (error || !media) throw new Error('Media not found')
+
+  // Get bucket based on media type
+  const bucket = media.type === 'photo' ? 'photos' : 'audio'
+
+  // Get signed URL
+  const { data: signedData } = await supabase.storage
+    .from(bucket)
+    .createSignedUrl(media.file_path, 3600)
+
+  if (!signedData?.signedUrl) throw new Error('Failed to get media URL')
+
+  // Retry analysis based on type
+  if (media.type === 'photo') {
+    await analyzePhotoAndExtractMetrics(
+      media.id,
+      signedData.signedUrl,
+      media.profile_id,
+      media.timestamp
+    )
+  } else if (media.type === 'voice') {
+    await analyzeAudioAndExtractMetrics(
+      media.id,
+      signedData.signedUrl,
+      media.profile_id,
+      media.timestamp
+    )
+  } else {
+    throw new Error('Media type does not support analysis')
+  }
 }

@@ -24,12 +24,12 @@ export default function Settings({ darkMode, setDarkMode }: SettingsProps) {
   const [gender, setGender] = useState<'M' | 'F' | 'O'>('M')
   const [dateOfBirth, setDateOfBirth] = useState('')
 
-  // Auto-open create form if no profiles
+  // Auto-open create form ONLY if no profiles exist at all
   useEffect(() => {
-    if (profiles.length === 0 && !showCreateForm) {
+    if (profiles.length === 0 && !showCreateForm && !editingId) {
       setShowCreateForm(true)
     }
-  }, [profiles.length, showCreateForm])
+  }, [profiles.length, showCreateForm, editingId])
 
   const handleSignOut = async () => {
     try {
@@ -235,7 +235,7 @@ export default function Settings({ darkMode, setDarkMode }: SettingsProps) {
               onClick={() => setShowCreateForm(true)}
               className="w-full py-2 bg-primary text-background-dark rounded-lg font-medium hover:bg-primary/90 transition-colors text-sm"
             >
-              Add New Profile
+              Add New Person
             </button>
           )}
         </div>

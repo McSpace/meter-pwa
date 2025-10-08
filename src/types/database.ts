@@ -20,22 +20,29 @@ export interface ProfileWithAge extends Profile {
   age: number
 }
 
-export type MetricType = 'weight' | 'bloodPressure' | 'pulse'
+// Common predefined metric types (for UI convenience)
+export type PredefinedMetricType = 'weight' | 'bloodPressure' | 'pulse'
+
+// Metric type can be any string (dynamic types from AI)
+export type MetricType = string
 
 export interface Metric {
   id: string
   profile_id: string
-  type: MetricType
+  type: string  // Can be any metric type
   value: number
   unit: string
   timestamp: string
   notes: string | null
+  media_id: string | null
   created_at: string
   updated_at: string
   deleted_at: string | null
 }
 
 export type MediaType = 'photo' | 'voice'
+
+export type AnalysisStatus = 'pending' | 'analyzing' | 'completed' | 'failed' | 'not_applicable'
 
 export interface Media {
   id: string
@@ -48,6 +55,8 @@ export interface Media {
   duration: number | null
   timestamp: string
   notes: string | null
+  analysis_status: AnalysisStatus
+  analysis_error: string | null
   created_at: string
   deleted_at: string | null
 }
@@ -55,4 +64,16 @@ export interface Media {
 export interface MediaWithUrls extends Media {
   url: string
   thumbnail_url?: string
+}
+
+// AI Image Analysis types
+export interface DetectedMeasurement {
+  measurement_type: string
+  unit: string
+  value: string
+}
+
+export interface ImageAnalysisResult {
+  description: string
+  measurements: DetectedMeasurement[]
 }
