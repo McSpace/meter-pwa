@@ -1,72 +1,72 @@
 # Health Dashboard - Backend Specification
 
-> **Полная спецификация бэкенда для PWA приложения отслеживания здоровья**
+> **Complete backend specification for health tracking PWA application**
 >
-> Версия: 2.0
-> Дата: 2024-10-03
+> Version: 2.0
+> Date: 2024-10-03
 
 ---
 
-## 📖 Оглавление
+## 📖 Table of Contents
 
-1. [Основные требования](#основные-требования)
-2. [Архитектура](#архитектура)
+1. [Core Requirements](#core-requirements)
+2. [Architecture](#architecture)
 3. [API Endpoints](#api-endpoints)
 4. [Database Schema](#database-schema)
-5. [Безопасность](#безопасность)
+5. [Security](#security)
 6. [Tech Stack](#tech-stack)
-7. [Клиентский Flow](#клиентский-flow)
-8. [UI Изменения](#ui-изменения)
+7. [Client Flow](#client-flow)
+8. [UI Changes](#ui-changes)
 
 ---
 
-## 🎯 Основные требования
+## 🎯 Core Requirements
 
-### Функциональные требования
+### Functional Requirements
 
-1. **Анонимная регистрация** - создание аккаунта без email/password
-2. **Управление профилями** - множественные персоны (семья)
-3. **Метрики здоровья** - вес, давление, пульс с привязкой к профилю
-4. **Медиа файлы** - фото и голосовые заметки
-5. **Временные ряды** - история измерений с агрегацией
-6. **Offline-first** - синхронизация после офлайн работы
+1. **Anonymous Registration** - account creation without email/password
+2. **Profile Management** - multiple personas (family members)
+3. **Health Metrics** - weight, blood pressure, pulse linked to profiles
+4. **Media Files** - photos and voice notes
+5. **Time Series** - measurement history with aggregation
+6. **Offline-first** - synchronization after offline work
 
-### Нефункциональные требования
+### Non-functional Requirements
 
-1. **REST API** - простой и понятный интерфейс
-2. **JWT авторизация** - токены без email/password
-3. **PostgreSQL** - основная БД
-4. **S3-compatible storage** - для медиа файлов
-5. **Stateless** - горизонтальное масштабирование
-6. **Безопасность** - HTTPS, валидация, rate limiting
+1. **REST API** - simple and clear interface
+2. **JWT Authorization** - tokens without email/password
+3. **PostgreSQL** - primary database
+4. **S3-compatible storage** - for media files
+5. **Stateless** - horizontal scaling
+6. **Security** - HTTPS, validation, rate limiting
 
 ---
 
-## 🏗️ Архитектура
+## 🏗️ Architecture
 
-### Концепция: User → Profiles → Data
+### Concept: User → Profiles → Data
 
 ```
-User (Анонимный аккаунт)
-├── JWT Token (хранится в localStorage)
-└── Profiles (Персоны)
-    ├── Profile 1 (Папа - John, M, 1985-05-15)
-    │   ├── Metrics (вес, давление, пульс...)
-    │   └── Media (фото, голосовые заметки...)
-    ├── Profile 2 (Мама - Jane, F, 1987-03-20)
+User (Anonymous account)
+├── JWT Token (stored in localStorage)
+└── Profiles (Personas)
+    ├── Profile 1 (Dad - John, M, 1985-05-15)
+    │   ├── Metrics (weight, blood pressure, pulse...)
+    │   └── Media (photos, voice notes...)
+    ├── Profile 2 (Mom - Jane, F, 1987-03-20)
     │   ├── Metrics
     │   └── Media
-    └── Profile 3 (Ребёнок - Tom, M, 2015-08-10)
+    └── Profile 3 (Child - Tom, M, 2015-08-10)
         ├── Metrics
         └── Media
 ```
 
-### Ключевые принципы
+### Key Principles
 
-- **Один токен** - всё управление через JWT
-- **Множественные профили** - семейное использование
-- **Привязка к профилю** - все данные связаны с конкретной персоной
-- **Каскадное удаление** - удаление профиля удаляет все его данные
+- **Single token** - all management through JWT
+- **Multiple profiles** - family usage
+- **Profile binding** - all data linked to specific persona
+- **Cascade deletion** - deleting profile removes all its data
 
 ---
 
@@ -90,14 +90,14 @@ Content-Type: application/json
 
 ### `POST /api/auth/register`
 
-**Описание:** Анонимная регистрация - создание нового пользователя без обязательных данных
+**Description:** Anonymous registration - creating a new user without required data
 
 **Request:**
 ```json
 {}
 ```
 
-или с опциональным именем:
+or with optional name:
 
 ```json
 {
@@ -117,21 +117,21 @@ Content-Type: application/json
 }
 ```
 
-**Суть работы:**
-1. Генерация UUID для нового пользователя
-2. Создание записи в `users` таблице
-3. Генерация JWT токена (payload: `{ userId: "uuid" }`)
-4. Возврат пользователя и токена
-5. **Клиент сохраняет token в localStorage**
+**How it works:**
+1. Generate UUID for new user
+2. Create record in `users` table
+3. Generate JWT token (payload: `{ userId: "uuid" }`)
+4. Return user and token
+5. **Client saves token in localStorage**
 
 **Errors:**
-- `429 Too Many Requests` - превышен rate limit (10 запросов/час)
+- `429 Too Many Requests` - rate limit exceeded (10 requests/hour)
 
 ---
 
 ### `GET /api/auth/me`
 
-**Описание:** Получение информации о текущем пользователе
+**Description:** Get current user information
 
 **Headers:** `Authorization: Bearer {token}`
 
@@ -144,21 +144,21 @@ Content-Type: application/json
 }
 ```
 
-**Суть работы:**
-1. Валидация JWT токена из заголовка
-2. Извлечение `userId` из payload
-3. SELECT пользователя из БД
-4. Возврат данных профиля
+**How it works:**
+1. Validate JWT token from header
+2. Extract `userId` from payload
+3. SELECT user from DB
+4. Return profile data
 
 **Errors:**
-- `401 Unauthorized` - невалидный или отсутствующий токен
-- `404 Not Found` - пользователь не найден
+- `401 Unauthorized` - invalid or missing token
+- `404 Not Found` - user not found
 
 ---
 
 ### `PATCH /api/auth/me`
 
-**Описание:** Обновление профиля пользователя (добавление имени)
+**Description:** Update user profile (add name)
 
 **Headers:** `Authorization: Bearer {token}`
 
@@ -178,19 +178,19 @@ Content-Type: application/json
 }
 ```
 
-**Суть работы:**
-1. Аутентификация через JWT
-2. UPDATE поля `name` в таблице users
-3. UPDATE поля `updated_at`
-4. Возврат обновлённых данных
+**How it works:**
+1. Authenticate via JWT
+2. UPDATE `name` field in users table
+3. UPDATE `updated_at` field
+4. Return updated data
 
 ---
 
-## 2️⃣ Profiles (Персоны)
+## 2️⃣ Profiles (Personas)
 
 ### `POST /api/profiles`
 
-**Описание:** Создание новой персоны (член семьи)
+**Description:** Create a new persona (family member)
 
 **Headers:** `Authorization: Bearer {token}`
 
@@ -203,10 +203,10 @@ Content-Type: application/json
 }
 ```
 
-**Поля:**
-- `name` (string, required) - имя персоны
-- `gender` (string, required) - пол: "M" (male), "F" (female), "O" (other)
-- `dateOfBirth` (date, required) - дата рождения в формате YYYY-MM-DD
+**Fields:**
+- `name` (string, required) - persona name
+- `gender` (string, required) - gender: "M" (male), "F" (female), "O" (other)
+- `dateOfBirth` (date, required) - birth date in YYYY-MM-DD format
 
 **Response (201):**
 ```json
@@ -221,24 +221,24 @@ Content-Type: application/json
 }
 ```
 
-**Суть работы:**
-1. Аутентификация пользователя через JWT
-2. Валидация обязательных полей
-3. Валидация gender (M, F, O)
-4. Валидация dateOfBirth (формат ISO date)
-5. Расчёт возраста: `EXTRACT(YEAR FROM age(current_date, date_of_birth))`
-6. INSERT в таблицу `profiles`
-7. Возврат созданного профиля с вычисленным возрастом
+**How it works:**
+1. Authenticate user via JWT
+2. Validate required fields
+3. Validate gender (M, F, O)
+4. Validate dateOfBirth (ISO date format)
+5. Calculate age: `EXTRACT(YEAR FROM age(current_date, date_of_birth))`
+6. INSERT into `profiles` table
+7. Return created profile with calculated age
 
 **Errors:**
-- `400 Bad Request` - невалидные данные
-- `401 Unauthorized` - нет токена
+- `400 Bad Request` - invalid data
+- `401 Unauthorized` - no token
 
 ---
 
 ### `GET /api/profiles`
 
-**Описание:** Получение списка всех персон текущего пользователя
+**Description:** Get list of all current user's personas
 
 **Headers:** `Authorization: Bearer {token}`
 
@@ -275,23 +275,23 @@ Content-Type: application/json
 }
 ```
 
-**Суть работы:**
-1. Аутентификация пользователя
-2. SELECT всех профилей: `WHERE user_id = current_user`
-3. Расчёт возраста для каждого профиля
-4. Сортировка по `created_at ASC` (сначала созданные)
-5. Возврат массива с общим количеством
+**How it works:**
+1. Authenticate user
+2. SELECT all profiles: `WHERE user_id = current_user`
+3. Calculate age for each profile
+4. Sort by `created_at ASC` (oldest first)
+5. Return array with total count
 
 ---
 
 ### `GET /api/profiles/:id`
 
-**Описание:** Получение конкретной персоны по ID
+**Description:** Get specific persona by ID
 
 **Headers:** `Authorization: Bearer {token}`
 
 **URL Parameters:**
-- `id` (uuid) - ID профиля
+- `id` (uuid) - profile ID
 
 **Response (200):**
 ```json
@@ -306,22 +306,22 @@ Content-Type: application/json
 }
 ```
 
-**Суть работы:**
-1. Аутентификация пользователя
-2. SELECT профиля: `WHERE id = :id AND user_id = current_user`
-3. Проверка владельца (403 если не принадлежит)
-4. Расчёт возраста
-5. Возврат профиля
+**How it works:**
+1. Authenticate user
+2. SELECT profile: `WHERE id = :id AND user_id = current_user`
+3. Check ownership (403 if doesn't belong)
+4. Calculate age
+5. Return profile
 
 **Errors:**
-- `404 Not Found` - профиль не найден
-- `403 Forbidden` - профиль принадлежит другому пользователю
+- `404 Not Found` - profile not found
+- `403 Forbidden` - profile belongs to another user
 
 ---
 
 ### `PATCH /api/profiles/:id`
 
-**Описание:** Обновление данных персоны
+**Description:** Update persona data
 
 **Headers:** `Authorization: Bearer {token}`
 
@@ -346,34 +346,34 @@ Content-Type: application/json
 }
 ```
 
-**Суть работы:**
-1. Аутентификация и проверка владельца
-2. Частичное обновление (только переданные поля)
-3. Валидация изменённых полей
-4. UPDATE в БД
-5. Пересчёт возраста если изменилась дата
-6. Возврат обновлённого профиля
+**How it works:**
+1. Authenticate and verify ownership
+2. Partial update (only provided fields)
+3. Validate changed fields
+4. UPDATE in DB
+5. Recalculate age if date changed
+6. Return updated profile
 
 ---
 
 ### `DELETE /api/profiles/:id`
 
-**Описание:** Удаление персоны и всех связанных данных
+**Description:** Delete persona and all related data
 
 **Headers:** `Authorization: Bearer {token}`
 
 **Response (204):** No Content
 
-**Суть работы:**
-1. Аутентификация и проверка владельца
-2. (Опционально) Проверка: нельзя удалить последний профиль
-3. DELETE из БД (каскадное удаление metrics и media через ON DELETE CASCADE)
-4. Или мягкое удаление: UPDATE `deleted_at = NOW()`
-5. Возврат 204
+**How it works:**
+1. Authenticate and verify ownership
+2. (Optional) Check: cannot delete last profile
+3. DELETE from DB (cascade delete metrics and media via ON DELETE CASCADE)
+4. Or soft delete: UPDATE `deleted_at = NOW()`
+5. Return 204
 
 **Errors:**
-- `400 Bad Request` - попытка удалить последний профиль
-- `404 Not Found` - профиль не найден
+- `400 Bad Request` - attempt to delete last profile
+- `404 Not Found` - profile not found
 
 ---
 
@@ -381,7 +381,7 @@ Content-Type: application/json
 
 ### `POST /api/metrics`
 
-**Описание:** Создание новой метрики здоровья для персоны
+**Description:** Create new health metric for persona
 
 **Headers:** `Authorization: Bearer {token}`
 
@@ -397,13 +397,13 @@ Content-Type: application/json
 }
 ```
 
-**Поля:**
-- `profileId` (uuid, required) - ID персоны
-- `type` (string, required) - тип метрики: "weight", "bloodPressure", "pulse"
-- `value` (number, required) - числовое значение
-- `unit` (string, required) - единица измерения: "lbs", "kg", "mmHg", "bpm"
-- `timestamp` (datetime, required) - время измерения (ISO 8601)
-- `notes` (text, optional) - заметки без ограничения длины
+**Fields:**
+- `profileId` (uuid, required) - persona ID
+- `type` (string, required) - metric type: "weight", "bloodPressure", "pulse"
+- `value` (number, required) - numeric value
+- `unit` (string, required) - unit of measurement: "lbs", "kg", "mmHg", "bpm"
+- `timestamp` (datetime, required) - measurement time (ISO 8601)
+- `notes` (text, optional) - notes without length limit
 
 **Response (201):**
 ```json
@@ -419,35 +419,35 @@ Content-Type: application/json
 }
 ```
 
-**Суть работы:**
-1. Аутентификация пользователя
-2. **Проверка что profileId принадлежит текущему пользователю**
-3. Валидация типа метрики (enum: weight, bloodPressure, pulse)
-4. Валидация значения (число > 0, разумные пределы)
-5. Валидация соответствия unit и type
-6. INSERT в таблицу `metrics`
-7. Возврат созданной записи
+**How it works:**
+1. Authenticate user
+2. **Verify that profileId belongs to current user**
+3. Validate metric type (enum: weight, bloodPressure, pulse)
+4. Validate value (number > 0, reasonable limits)
+5. Validate unit and type match
+6. INSERT into `metrics` table
+7. Return created record
 
 **Errors:**
-- `400 Bad Request` - невалидные данные
-- `403 Forbidden` - profileId не принадлежит пользователю
-- `404 Not Found` - профиль не существует
+- `400 Bad Request` - invalid data
+- `403 Forbidden` - profileId doesn't belong to user
+- `404 Not Found` - profile doesn't exist
 
 ---
 
 ### `GET /api/metrics`
 
-**Описание:** Получение списка метрик с фильтрацией и пагинацией
+**Description:** Get list of metrics with filtering and pagination
 
 **Headers:** `Authorization: Bearer {token}`
 
 **Query Parameters:**
-- `profileId` (uuid, **required**) - фильтр по персоне
-- `type` (string, optional) - фильтр по типу метрики
-- `from` (datetime, optional) - начало периода (ISO 8601)
-- `to` (datetime, optional) - конец периода (ISO 8601)
-- `limit` (number, optional, default: 100) - количество записей
-- `offset` (number, optional, default: 0) - смещение для пагинации
+- `profileId` (uuid, **required**) - filter by persona
+- `type` (string, optional) - filter by metric type
+- `from` (datetime, optional) - period start (ISO 8601)
+- `to` (datetime, optional) - period end (ISO 8601)
+- `limit` (number, optional, default: 100) - number of records
+- `offset` (number, optional, default: 0) - offset for pagination
 
 **Example:**
 ```
@@ -483,37 +483,37 @@ GET /api/metrics?profileId=650e8400-e29b-41d4-a716-446655440001&type=weight&from
 }
 ```
 
-**Суть работы:**
-1. Аутентификация пользователя
-2. **Проверка что profileId принадлежит пользователю** (JOIN profiles)
-3. Построение SQL с фильтрами:
+**How it works:**
+1. Authenticate user
+2. **Verify that profileId belongs to user** (JOIN profiles)
+3. Build SQL with filters:
    ```sql
    WHERE profile_id = :profileId
-     AND type = :type (если указан)
-     AND timestamp BETWEEN :from AND :to (если указаны)
+     AND type = :type (if specified)
+     AND timestamp BETWEEN :from AND :to (if specified)
    ```
-4. Сортировка: `ORDER BY timestamp DESC`
-5. Пагинация: `LIMIT :limit OFFSET :offset`
-6. Подсчёт общего количества: `SELECT COUNT(*)`
-7. Возврат массива + метаданные пагинации
+4. Sort: `ORDER BY timestamp DESC`
+5. Pagination: `LIMIT :limit OFFSET :offset`
+6. Count total: `SELECT COUNT(*)`
+7. Return array + pagination metadata
 
 **Errors:**
-- `400 Bad Request` - profileId не указан
-- `403 Forbidden` - profileId не принадлежит пользователю
+- `400 Bad Request` - profileId not specified
+- `403 Forbidden` - profileId doesn't belong to user
 
 ---
 
 ### `GET /api/metrics/aggregate`
 
-**Описание:** Получение агрегированных данных для построения графиков
+**Description:** Get aggregated data for building charts
 
 **Headers:** `Authorization: Bearer {token}`
 
 **Query Parameters:**
-- `profileId` (uuid, **required**) - ID персоны
-- `type` (string, **required**) - тип метрики
-- `period` (string, required) - период: "1W", "1M", "1Y"
-- `groupBy` (string, optional, default: "day") - группировка: "day", "week", "month"
+- `profileId` (uuid, **required**) - persona ID
+- `type` (string, **required**) - metric type
+- `period` (string, required) - period: "1W", "1M", "1Y"
+- `groupBy` (string, optional, default: "day") - grouping: "day", "week", "month"
 
 **Example:**
 ```
@@ -556,13 +556,13 @@ GET /api/metrics/aggregate?profileId=650e8400-e29b-41d4-a716-446655440001&type=w
 }
 ```
 
-**Суть работы:**
-1. Аутентификация и проверка владельца профиля
-2. Расчёт временного диапазона:
-   - 1W: последние 7 дней
-   - 1M: последние 30 дней
-   - 1Y: последние 365 дней
-3. SQL агрегация:
+**How it works:**
+1. Authenticate and verify profile ownership
+2. Calculate time range:
+   - 1W: last 7 days
+   - 1M: last 30 days
+   - 1Y: last 365 days
+3. SQL aggregation:
    ```sql
    SELECT
      DATE_TRUNC(:groupBy, timestamp) as date,
@@ -577,36 +577,36 @@ GET /api/metrics/aggregate?profileId=650e8400-e29b-41d4-a716-446655440001&type=w
    GROUP BY DATE_TRUNC(:groupBy, timestamp)
    ORDER BY date ASC
    ```
-4. Расчёт изменения:
-   - `current` = последнее среднее значение
-   - `previous` = среднее за предыдущий период
+4. Calculate change:
+   - `current` = last average value
+   - `previous` = average for previous period
    - `change` = current - previous
    - `changePercent` = (change / previous) * 100
-5. Возврат агрегированных данных
+5. Return aggregated data
 
 ---
 
 ### `DELETE /api/metrics/:id`
 
-**Описание:** Удаление метрики
+**Description:** Delete metric
 
 **Headers:** `Authorization: Bearer {token}`
 
 **Response (204):** No Content
 
-**Суть работы:**
-1. Аутентификация пользователя
-2. Проверка владельца через JOIN:
+**How it works:**
+1. Authenticate user
+2. Verify ownership via JOIN:
    ```sql
    SELECT m.* FROM metrics m
    JOIN profiles p ON m.profile_id = p.id
    WHERE m.id = :id AND p.user_id = :currentUserId
    ```
-3. DELETE или мягкое удаление (UPDATE deleted_at)
-4. Возврат 204
+3. DELETE or soft delete (UPDATE deleted_at)
+4. Return 204
 
 **Errors:**
-- `404 Not Found` - метрика не найдена или не принадлежит пользователю
+- `404 Not Found` - metric not found or doesn't belong to user
 
 ---
 
@@ -614,7 +614,7 @@ GET /api/metrics/aggregate?profileId=650e8400-e29b-41d4-a716-446655440001&type=w
 
 ### `POST /api/media/upload`
 
-**Описание:** Загрузка фото или голосовой заметки
+**Description:** Upload photo or voice note
 
 **Headers:**
 - `Authorization: Bearer {token}`
@@ -645,50 +645,50 @@ notes: "Optional description"
 }
 ```
 
-**Суть работы:**
-1. Аутентификация пользователя
-2. **Проверка что profileId принадлежит пользователю**
-3. Валидация типа файла:
+**How it works:**
+1. Authenticate user
+2. **Verify that profileId belongs to user**
+3. Validate file type:
    - photo: `image/jpeg`, `image/png`, `image/webp`
    - voice: `audio/mpeg`, `audio/mp4`, `audio/webm`, `audio/wav`
-4. Проверка размера:
-   - photo: максимум 10MB
-   - voice: максимум 5MB
-5. Генерация уникального имени: `{uuid}.{extension}`
-6. Для фото: создание thumbnail:
-   - Resize до 300px по ширине
-   - Сохранение качества 80%
-   - Формат: JPEG или WEBP
-7. Загрузка файлов в S3:
-   - Основной файл: `/{type}s/{uuid}.{ext}`
+4. Check size:
+   - photo: max 10MB
+   - voice: max 5MB
+5. Generate unique name: `{uuid}.{extension}`
+6. For photos: create thumbnail:
+   - Resize to 300px width
+   - Save quality 80%
+   - Format: JPEG or WEBP
+7. Upload files to S3:
+   - Main file: `/{type}s/{uuid}.{ext}`
    - Thumbnail: `/{type}s/{uuid}_thumb.{ext}`
-8. Для аудио: определение длительности (metadata)
-9. INSERT в таблицу `media`:
+8. For audio: determine duration (metadata)
+9. INSERT into `media` table:
    - file_path, url
-   - thumbnail_path, thumbnail_url (если фото)
+   - thumbnail_path, thumbnail_url (if photo)
    - size, mime_type
-   - duration (если аудио)
-10. Возврат URL и метаданных
+   - duration (if audio)
+10. Return URL and metadata
 
 **Errors:**
-- `400 Bad Request` - невалидный файл или размер
-- `403 Forbidden` - profileId не принадлежит пользователю
-- `413 Payload Too Large` - файл слишком большой
+- `400 Bad Request` - invalid file or size
+- `403 Forbidden` - profileId doesn't belong to user
+- `413 Payload Too Large` - file too large
 
 ---
 
 ### `GET /api/media`
 
-**Описание:** Получение списка медиа файлов
+**Description:** Get list of media files
 
 **Headers:** `Authorization: Bearer {token}`
 
 **Query Parameters:**
-- `profileId` (uuid, **required**) - фильтр по персоне
-- `type` (string, optional) - "photo" или "voice"
-- `from`, `to` (datetime, optional) - временной диапазон
-- `limit` (number, optional, default: 20) - количество
-- `offset` (number, optional, default: 0) - смещение
+- `profileId` (uuid, **required**) - filter by persona
+- `type` (string, optional) - "photo" or "voice"
+- `from`, `to` (datetime, optional) - time range
+- `limit` (number, optional, default: 20) - quantity
+- `offset` (number, optional, default: 0) - offset
 
 **Response (200):**
 ```json
@@ -723,33 +723,33 @@ notes: "Optional description"
 }
 ```
 
-**Суть работы:**
-1. Аутентификация и проверка владельца профиля
-2. SQL запрос с фильтрами
-3. Пагинация и сортировка по timestamp DESC
-4. Возврат списка с URL для доступа
+**How it works:**
+1. Authenticate and verify profile ownership
+2. SQL query with filters
+3. Pagination and sort by timestamp DESC
+4. Return list with URLs for access
 
 ---
 
 ### `DELETE /api/media/:id`
 
-**Описание:** Удаление медиа файла
+**Description:** Delete media file
 
 **Headers:** `Authorization: Bearer {token}`
 
 **Response (204):** No Content
 
-**Суть работы:**
-1. Аутентификация и проверка владельца
-2. Получение file_path и thumbnail_path из БД
-3. Удаление файлов из S3:
-   - Основной файл
-   - Thumbnail (если есть)
-4. DELETE из таблицы media
-5. Возврат 204
+**How it works:**
+1. Authenticate and verify ownership
+2. Get file_path and thumbnail_path from DB
+3. Delete files from S3:
+   - Main file
+   - Thumbnail (if exists)
+4. DELETE from media table
+5. Return 204
 
 **Errors:**
-- `404 Not Found` - файл не найден
+- `404 Not Found` - file not found
 
 ---
 
@@ -757,13 +757,13 @@ notes: "Optional description"
 
 ### `GET /api/feed`
 
-**Описание:** Объединённая лента событий персоны (метрики + медиа)
+**Description:** Combined event feed for persona (metrics + media)
 
 **Headers:** `Authorization: Bearer {token}`
 
 **Query Parameters:**
-- `profileId` (uuid, **required**) - ID персоны
-- `from`, `to` (datetime, optional) - временной диапазон
+- `profileId` (uuid, **required**) - persona ID
+- `from`, `to` (datetime, optional) - time range
 - `limit` (number, optional, default: 20)
 - `offset` (number, optional, default: 0)
 
@@ -811,9 +811,9 @@ notes: "Optional description"
 }
 ```
 
-**Суть работы:**
-1. Аутентификация и проверка владельца профиля
-2. SQL UNION запрос объединяющий metrics и media:
+**How it works:**
+1. Authenticate and verify profile ownership
+2. SQL UNION query combining metrics and media:
    ```sql
    (SELECT
      id,
@@ -844,8 +844,8 @@ notes: "Optional description"
    ORDER BY timestamp DESC
    LIMIT :limit OFFSET :offset
    ```
-3. Получение информации о профиле (JOIN profiles)
-4. Возврат унифицированного списка + данные профиля
+3. Get profile information (JOIN profiles)
+4. Return unified list + profile data
 
 ---
 
@@ -853,7 +853,7 @@ notes: "Optional description"
 
 ### `POST /api/sync`
 
-**Описание:** Синхронизация данных после офлайн работы клиента
+**Description:** Data synchronization after client offline work
 
 **Headers:** `Authorization: Bearer {token}`
 
@@ -930,32 +930,32 @@ notes: "Optional description"
 }
 ```
 
-**Суть работы:**
+**How it works:**
 
-**Фаза 1: Обработка клиентских изменений**
-1. Обработка в порядке зависимостей: profiles → metrics/media
-2. Создание новых профилей:
-   - INSERT профилей с temp IDs
-   - Сохранение маппинга temp → real UUID
-3. Замена temp profileId на real в метриках/медиа
-4. Создание метрик и медиа
-5. Обработка удалений (мягкое DELETE)
-6. Разрешение конфликтов (last-write-wins по timestamp)
+**Phase 1: Process client changes**
+1. Process in dependency order: profiles → metrics/media
+2. Create new profiles:
+   - INSERT profiles with temp IDs
+   - Save mapping temp → real UUID
+3. Replace temp profileId with real in metrics/media
+4. Create metrics and media
+5. Process deletions (soft DELETE)
+6. Resolve conflicts (last-write-wins by timestamp)
 
-**Фаза 2: Получение серверных изменений**
-1. SELECT изменений после lastSyncAt:
+**Phase 2: Get server changes**
+1. SELECT changes after lastSyncAt:
    ```sql
    WHERE created_at > :lastSyncAt OR updated_at > :lastSyncAt
    ```
-2. SELECT удалённых записей:
+2. SELECT deleted records:
    ```sql
    WHERE deleted_at > :lastSyncAt
    ```
 
-**Фаза 3: Возврат**
-1. Возврат всех серверных изменений
-2. Маппинг temp IDs → real UUIDs
-3. Новый timestamp синхронизации
+**Phase 3: Return**
+1. Return all server changes
+2. Mapping temp IDs → real UUIDs
+3. New sync timestamp
 
 ---
 
@@ -975,11 +975,11 @@ CREATE TABLE users (
 CREATE INDEX idx_users_created_at ON users(created_at);
 ```
 
-**Описание полей:**
-- `id` - UUID пользователя (автогенерация)
-- `name` - опциональное имя (может быть NULL)
-- `created_at` - дата создания аккаунта
-- `updated_at` - дата последнего обновления
+**Field descriptions:**
+- `id` - user UUID (auto-generated)
+- `name` - optional name (can be NULL)
+- `created_at` - account creation date
+- `updated_at` - last update date
 
 ---
 
@@ -1000,17 +1000,17 @@ CREATE INDEX idx_profiles_user ON profiles(user_id);
 CREATE INDEX idx_profiles_deleted ON profiles(deleted_at);
 ```
 
-**Описание полей:**
-- `id` - UUID профиля
-- `user_id` - владелец профиля (FK на users)
-- `name` - имя персоны (обязательно, без ограничений)
-- `gender` - пол: M (male), F (female), O (other)
-- `date_of_birth` - дата рождения для расчёта возраста
-- `deleted_at` - мягкое удаление (NULL = активен)
+**Field descriptions:**
+- `id` - profile UUID
+- `user_id` - profile owner (FK to users)
+- `name` - persona name (required, no constraints)
+- `gender` - gender: M (male), F (female), O (other)
+- `date_of_birth` - birth date for age calculation
+- `deleted_at` - soft delete (NULL = active)
 
 **Constraints:**
-- `ON DELETE CASCADE` - удаление пользователя удаляет все его профили
-- `CHECK (gender IN ('M', 'F', 'O'))` - валидация пола
+- `ON DELETE CASCADE` - deleting user deletes all their profiles
+- `CHECK (gender IN ('M', 'F', 'O'))` - gender validation
 
 ---
 
@@ -1034,19 +1034,19 @@ CREATE INDEX idx_metrics_timestamp ON metrics(timestamp DESC);
 CREATE INDEX idx_metrics_deleted ON metrics(deleted_at);
 ```
 
-**Описание полей:**
-- `id` - UUID метрики
-- `profile_id` - персона (FK на profiles)
-- `type` - тип: "weight", "bloodPressure", "pulse"
-- `value` - числовое значение (до 2 знаков после запятой)
-- `unit` - единица: "lbs", "kg", "mmHg", "bpm"
-- `timestamp` - время измерения (важнее чем created_at!)
-- `notes` - заметки без ограничений
-- `deleted_at` - мягкое удаление
+**Field descriptions:**
+- `id` - metric UUID
+- `profile_id` - persona (FK to profiles)
+- `type` - type: "weight", "bloodPressure", "pulse"
+- `value` - numeric value (up to 2 decimal places)
+- `unit` - unit: "lbs", "kg", "mmHg", "bpm"
+- `timestamp` - measurement time (more important than created_at!)
+- `notes` - notes without limits
+- `deleted_at` - soft delete
 
-**Индексы:**
-- Композитный (profile_id, type) для быстрой фильтрации
-- timestamp DESC для сортировки по времени
+**Indexes:**
+- Composite (profile_id, type) for fast filtering
+- timestamp DESC for time sorting
 
 ---
 
@@ -1074,79 +1074,79 @@ CREATE INDEX idx_media_timestamp ON media(timestamp DESC);
 CREATE INDEX idx_media_deleted ON media(deleted_at);
 ```
 
-**Описание полей:**
-- `id` - UUID файла
-- `profile_id` - персона (FK на profiles)
-- `type` - "photo" или "voice"
-- `file_path` - путь в S3: `/photos/{uuid}.jpg`
-- `thumbnail_path` - путь к превью (только для фото)
-- `url` - публичный URL к файлу
-- `thumbnail_url` - URL превью
-- `size` - размер в байтах
-- `mime_type` - MIME type файла
-- `duration` - длительность в секундах (только для аудио)
-- `timestamp` - время создания контента
-- `notes` - заметки
+**Field descriptions:**
+- `id` - file UUID
+- `profile_id` - persona (FK to profiles)
+- `type` - "photo" or "voice"
+- `file_path` - S3 path: `/photos/{uuid}.jpg`
+- `thumbnail_path` - thumbnail path (photos only)
+- `url` - public URL to file
+- `thumbnail_url` - thumbnail URL
+- `size` - size in bytes
+- `mime_type` - file MIME type
+- `duration` - duration in seconds (audio only)
+- `timestamp` - content creation time
+- `notes` - notes
 
 ---
 
 ### Migrations
 
-**Порядок создания:**
+**Creation order:**
 1. `users`
-2. `profiles` (зависит от users)
-3. `metrics` (зависит от profiles)
-4. `media` (зависит от profiles)
+2. `profiles` (depends on users)
+3. `metrics` (depends on profiles)
+4. `media` (depends on profiles)
 
-**Каскадное удаление:**
-- Удаление user → удаляет все profiles → удаляет все metrics/media
-- Удаление profile → удаляет все его metrics/media
+**Cascade deletion:**
+- Delete user → deletes all profiles → deletes all metrics/media
+- Delete profile → deletes all its metrics/media
 
 ---
 
-## 🔐 Безопасность
+## 🔐 Security
 
 ### Rate Limiting
 
-**По endpoint:**
-- `POST /api/auth/register` - 10 запросов/час (предотвращение спама)
-- `POST /api/media/upload` - 10 файлов/час
-- Все остальные API - 100 запросов/минуту на пользователя
+**Per endpoint:**
+- `POST /api/auth/register` - 10 requests/hour (spam prevention)
+- `POST /api/media/upload` - 10 files/hour
+- All other APIs - 100 requests/minute per user
 
-**Реализация:**
-- Redis для хранения счётчиков
-- Ключ: `ratelimit:{endpoint}:{userId или IP}`
-- TTL по истечению периода
+**Implementation:**
+- Redis for storing counters
+- Key: `ratelimit:{endpoint}:{userId or IP}`
+- TTL at end of period
 
 ---
 
-### Валидация
+### Validation
 
-**Входные данные:**
-1. **Метрики:**
+**Input data:**
+1. **Metrics:**
    - `value > 0`
-   - Разумные пределы (например, вес: 1-500 кг)
-   - Соответствие unit и type
-2. **Файлы:**
-   - MIME type из whitelist
-   - Размер: макс 10MB (фото), 5MB (аудио)
-   - Расширение файла соответствует MIME
-3. **Даты:**
-   - ISO 8601 формат
-   - `dateOfBirth` не в будущем
-   - `timestamp` не слишком далеко в будущем (макс +1 день)
+   - Reasonable limits (e.g., weight: 1-500 kg)
+   - Unit and type match
+2. **Files:**
+   - MIME type from whitelist
+   - Size: max 10MB (photo), 5MB (audio)
+   - File extension matches MIME
+3. **Dates:**
+   - ISO 8601 format
+   - `dateOfBirth` not in future
+   - `timestamp` not too far in future (max +1 day)
 4. **UUID:**
-   - Валидный формат UUID v4
+   - Valid UUID v4 format
 
-**Защита от инъекций:**
-- Параметризованные запросы (Prisma/TypeORM)
-- Никаких сырых SQL с конкатенацией
+**Injection protection:**
+- Parameterized queries (Prisma/TypeORM)
+- No raw SQL with concatenation
 
 ---
 
 ### JWT
 
-**Структура токена:**
+**Token structure:**
 ```json
 {
   "userId": "550e8400-e29b-41d4-a716-446655440000",
@@ -1155,22 +1155,22 @@ CREATE INDEX idx_media_deleted ON media(deleted_at);
 }
 ```
 
-**Параметры:**
-- Алгоритм: HS256
-- Срок действия: 30 дней
-- Secret: из переменной окружения `JWT_SECRET`
-- Обновление: нет refresh tokens (для упрощения)
+**Parameters:**
+- Algorithm: HS256
+- Expiration: 30 days
+- Secret: from environment variable `JWT_SECRET`
+- Refresh: no refresh tokens (for simplicity)
 
-**Проверка:**
-- Каждый защищённый endpoint проверяет токен
-- Извлечение userId из payload
-- Проверка существования пользователя (опционально, кэшировать)
+**Verification:**
+- Each protected endpoint verifies token
+- Extract userId from payload
+- Check user exists (optional, cache)
 
 ---
 
 ### CORS
 
-**Настройки:**
+**Settings:**
 ```javascript
 {
   origin: [
@@ -1184,14 +1184,14 @@ CREATE INDEX idx_media_deleted ON media(deleted_at);
 
 ---
 
-### Хранение файлов
+### File Storage
 
 **S3 Security:**
-- Приватные bucket (не публичный доступ)
-- Signed URLs с ограниченным временем жизни (1 час)
-- Или публичный bucket с уникальными UUID именами
+- Private bucket (no public access)
+- Signed URLs with limited lifetime (1 hour)
+- Or public bucket with unique UUID names
 
-**Структура:**
+**Structure:**
 ```
 bucket/
 ├── photos/
@@ -1210,12 +1210,12 @@ bucket/
 **Runtime & Framework:**
 - Node.js 20 LTS
 - TypeScript 5+
-- Fastify (быстрее чем Express, хорошая типизация)
+- Fastify (faster than Express, good typing)
 
 **Database:**
 - PostgreSQL 15+
-- Prisma ORM (отличная TypeScript интеграция)
-- Миграции через Prisma Migrate
+- Prisma ORM (excellent TypeScript integration)
+- Migrations via Prisma Migrate
 
 **Storage:**
 - AWS S3 / MinIO / Cloudflare R2
@@ -1225,19 +1225,19 @@ bucket/
 - jsonwebtoken (JWT)
 
 **Validation:**
-- Zod (schema validation с TypeScript)
+- Zod (schema validation with TypeScript)
 
 **File Upload:**
 - @fastify/multipart
-- sharp (image resize для thumbnails)
+- sharp (image resize for thumbnails)
 
 **Utilities:**
-- date-fns (работа с датами)
-- dotenv (переменные окружения)
+- date-fns (date handling)
+- dotenv (environment variables)
 
 ---
 
-### Структура проекта
+### Project Structure
 
 ```
 backend/
@@ -1305,16 +1305,16 @@ REDIS_URL=redis://localhost:6379
 
 ---
 
-## 🔄 Клиентский Flow
+## 🔄 Client Flow
 
-### Первый запуск приложения
+### First App Launch
 
 ```javascript
-// 1. Проверка наличия токена
+// 1. Check for token
 const token = localStorage.getItem('auth_token');
 
 if (!token) {
-  // 2. Анонимная регистрация
+  // 2. Anonymous registration
   const response = await fetch('/api/auth/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -1323,16 +1323,16 @@ if (!token) {
 
   const { token: newToken, user } = await response.json();
 
-  // 3. Сохранение токена
+  // 3. Save token
   localStorage.setItem('auth_token', newToken);
   localStorage.setItem('user_id', user.id);
 }
 
-// 4. Проверка наличия профилей
+// 4. Check for profiles
 const profiles = await getProfiles();
 
 if (profiles.length === 0) {
-  // 5. Создание первого профиля (онбординг)
+  // 5. Create first profile (onboarding)
   const profile = await createProfile({
     name: "Me",
     gender: "M",
@@ -1341,7 +1341,7 @@ if (profiles.length === 0) {
 
   localStorage.setItem('active_profile_id', profile.id);
 } else {
-  // Выбор последнего активного или первого
+  // Select last active or first
   const activeId = localStorage.getItem('active_profile_id') || profiles[0].id;
   localStorage.setItem('active_profile_id', activeId);
 }
@@ -1349,13 +1349,13 @@ if (profiles.length === 0) {
 
 ---
 
-### Работа с метриками
+### Working with Metrics
 
 ```javascript
-// Получение активного профиля
+// Get active profile
 const profileId = localStorage.getItem('active_profile_id');
 
-// Создание метрики
+// Create metric
 await fetch('/api/metrics', {
   method: 'POST',
   headers: {
@@ -1372,7 +1372,7 @@ await fetch('/api/metrics', {
   })
 });
 
-// Получение метрик для графика
+// Get metrics for chart
 const response = await fetch(
   `/api/metrics/aggregate?profileId=${profileId}&type=weight&period=1W`,
   {
@@ -1388,41 +1388,41 @@ const { data } = await response.json();
 
 ---
 
-### Переключение профилей
+### Profile Switching
 
 ```javascript
-// Получение списка профилей
+// Get profile list
 const { profiles } = await fetch('/api/profiles', {
   headers: {
     'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
   }
 }).then(r => r.json());
 
-// Отображение списка
+// Display list
 profiles.forEach(profile => {
-  console.log(`${profile.name} (${profile.age} лет)`);
+  console.log(`${profile.name} (${profile.age} years old)`);
 });
 
-// Переключение на другой профиль
+// Switch to another profile
 const selectedId = profiles[1].id; // Jane
 localStorage.setItem('active_profile_id', selectedId);
 
-// Обновление UI
-window.location.reload(); // или Redux/Context update
+// Update UI
+window.location.reload(); // or Redux/Context update
 ```
 
 ---
 
-### Offline синхронизация
+### Offline Synchronization
 
 ```javascript
-// При потере сети
+// On network loss
 window.addEventListener('offline', () => {
-  // Включаем offline режим
+  // Enable offline mode
   localStorage.setItem('offline_mode', 'true');
 });
 
-// Сохранение изменений в IndexedDB
+// Save changes to IndexedDB
 async function createMetricOffline(data) {
   const db = await openIndexedDB();
   const tempId = `temp-${Date.now()}`;
@@ -1434,16 +1434,16 @@ async function createMetricOffline(data) {
   });
 }
 
-// При восстановлении сети
+// On network recovery
 window.addEventListener('online', async () => {
   const lastSync = localStorage.getItem('last_sync_at');
   const db = await openIndexedDB();
 
-  // Получаем все изменения
+  // Get all changes
   const pendingMetrics = await db.getAll('pending_metrics');
   const pendingMedia = await db.getAll('pending_media');
 
-  // Отправляем на сервер
+  // Send to server
   const response = await fetch('/api/sync', {
     method: 'POST',
     headers: {
@@ -1462,18 +1462,18 @@ window.addEventListener('online', async () => {
 
   const { serverChanges, mapping, syncedAt } = await response.json();
 
-  // Обновляем temp IDs на real
+  // Update temp IDs to real
   for (const [tempId, realId] of Object.entries(mapping)) {
     await db.delete('pending_metrics', tempId);
-    // Обновляем UI
+    // Update UI
   }
 
-  // Сохраняем серверные изменения
+  // Save server changes
   for (const metric of serverChanges.metrics) {
     await db.put('metrics', metric);
   }
 
-  // Обновляем last sync
+  // Update last sync
   localStorage.setItem('last_sync_at', syncedAt);
   localStorage.removeItem('offline_mode');
 });
@@ -1481,34 +1481,34 @@ window.addEventListener('online', async () => {
 
 ---
 
-## 🎨 UI Изменения для клиента
+## 🎨 UI Changes for Client
 
-### Новые экраны
+### New Screens
 
-#### 1. Profile Selector (Выбор профиля)
+#### 1. Profile Selector
 
 ```
 ┌─────────────────────────────────┐
-│  ←  Профили                     │
+│  ←  Profiles                    │
 ├─────────────────────────────────┤
 │                                 │
 │  ┌───────────────────────────┐ │
 │  │ 👨 John Doe               │ │
-│  │ Мужчина, 39 лет       ✓   │ │ ← активный
+│  │ Male, 39 years old    ✓   │ │ ← active
 │  └───────────────────────────┘ │
 │                                 │
 │  ┌───────────────────────────┐ │
 │  │ 👩 Jane Doe               │ │
-│  │ Женщина, 37 лет           │ │
+│  │ Female, 37 years old      │ │
 │  └───────────────────────────┘ │
 │                                 │
 │  ┌───────────────────────────┐ │
 │  │ 👦 Tom Doe                │ │
-│  │ Мужчина, 9 лет            │ │
+│  │ Male, 9 years old         │ │
 │  └───────────────────────────┘ │
 │                                 │
 │  ┌───────────────────────────┐ │
-│  │ ➕ Добавить профиль        │ │
+│  │ ➕ Add Profile             │ │
 │  └───────────────────────────┘ │
 │                                 │
 └─────────────────────────────────┘
@@ -1520,26 +1520,26 @@ window.addEventListener('online', async () => {
 
 ```
 ┌─────────────────────────────────┐
-│  ←  Новый профиль               │
+│  ←  New Profile                 │
 ├─────────────────────────────────┤
 │                                 │
-│  Имя                            │
+│  Name                           │
 │  ┌───────────────────────────┐ │
 │  │ John Doe                  │ │
 │  └───────────────────────────┘ │
 │                                 │
-│  Пол                            │
-│  ○ Мужской  ● Женский  ○ Другой│
+│  Gender                         │
+│  ○ Male  ● Female  ○ Other     │
 │                                 │
-│  Дата рождения                  │
+│  Date of Birth                  │
 │  ┌───────────────────────────┐ │
-│  │ 15.05.1985                │ │
+│  │ 05/15/1985                │ │
 │  └───────────────────────────┘ │
 │                                 │
-│  Возраст: 39 лет                │
+│  Age: 39 years old              │
 │                                 │
 │  ┌───────────────────────────┐ │
-│  │     Сохранить             │ │
+│  │     Save                  │ │
 │  └───────────────────────────┘ │
 │                                 │
 └─────────────────────────────────┘
@@ -1547,13 +1547,13 @@ window.addEventListener('online', async () => {
 
 ---
 
-#### 3. Dashboard с селектором профиля
+#### 3. Dashboard with Profile Selector
 
 ```
 ┌─────────────────────────────────┐
 │  Dashboard                      │
 │                                 │
-│  Профиль: John (39) ▼           │ ← выпадающий список
+│  Profile: John (39) ▼           │ ← dropdown
 ├─────────────────────────────────┤
 │  Weight                     ▼   │
 ├─────────────────────────────────┤
@@ -1564,7 +1564,7 @@ window.addEventListener('online', async () => {
 │  │                           │ │
 │  │  1W  1M  1Y               │ │
 │  │                           │ │
-│  │  [График]                 │ │
+│  │  [Chart]                  │ │
 │  │                           │ │
 │  └───────────────────────────┘ │
 │                                 │
@@ -1573,7 +1573,7 @@ window.addEventListener('online', async () => {
 
 ---
 
-### Обновлённые компоненты
+### Updated Components
 
 **1. Header:**
 ```jsx
@@ -1588,7 +1588,7 @@ window.addEventListener('online', async () => {
 **2. Metrics Form:**
 ```jsx
 <MetricForm
-  profileId={activeProfileId}  // новое поле
+  profileId={activeProfileId}  // new field
   onSubmit={handleSubmit}
 />
 ```
@@ -1603,7 +1603,7 @@ window.addEventListener('online', async () => {
 
 ---
 
-### LocalStorage структура
+### LocalStorage Structure
 
 ```javascript
 {
@@ -1613,7 +1613,7 @@ window.addEventListener('online', async () => {
 
   // Profile
   "active_profile_id": "650e8400-e29b-41d4-a716-446655440001",
-  "profiles": "[{...}, {...}]",  // кэш профилей
+  "profiles": "[{...}, {...}]",  // profile cache
 
   // Sync
   "last_sync_at": "2024-10-03T12:00:00.000Z",
@@ -1641,19 +1641,19 @@ CMD ["npm", "start"]
 ```
 
 **Environment:**
-- Настроить все переменные из `.env.example`
-- Подключить PostgreSQL database (Railway addon)
-- Настроить S3 (AWS или Cloudflare R2)
+- Configure all variables from `.env.example`
+- Connect PostgreSQL database (Railway addon)
+- Configure S3 (AWS or Cloudflare R2)
 
 ---
 
-## ✅ Чеклист реализации
+## ✅ Implementation Checklist
 
 ### Backend
-- [ ] Настроить Fastify сервер
-- [ ] Настроить Prisma ORM + PostgreSQL
-- [ ] Реализовать JWT middleware
-- [ ] Реализовать rate limiting
+- [ ] Set up Fastify server
+- [ ] Set up Prisma ORM + PostgreSQL
+- [ ] Implement JWT middleware
+- [ ] Implement rate limiting
 - [ ] Endpoints: Auth (register, me, update)
 - [ ] Endpoints: Profiles (CRUD)
 - [ ] Endpoints: Metrics (CRUD + aggregate)
@@ -1665,53 +1665,53 @@ CMD ["npm", "start"]
 - [ ] Error handling
 - [ ] Validation (Zod)
 - [ ] Tests (Jest)
-- [ ] Deploy на Railway
+- [ ] Deploy to Railway
 
 ### Frontend
-- [ ] API client с axios/fetch
+- [ ] API client with axios/fetch
 - [ ] Auth flow (register, token storage)
 - [ ] Profile selector UI
 - [ ] Create/Edit profile forms
-- [ ] Update Dashboard для multi-profile
-- [ ] Update Feed для multi-profile
-- [ ] Update Media upload с profileId
-- [ ] IndexedDB для offline
+- [ ] Update Dashboard for multi-profile
+- [ ] Update Feed for multi-profile
+- [ ] Update Media upload with profileId
+- [ ] IndexedDB for offline
 - [ ] Sync mechanism
 - [ ] Loading states
 - [ ] Error handling
 
 ---
 
-## 📝 Примечания
+## 📝 Notes
 
-### Будущие улучшения
+### Future Improvements
 
-1. **Email привязка:**
-   - Опциональная привязка email к анонимному аккаунту
-   - Вход с email/password
-   - Восстановление пароля
+1. **Email Binding:**
+   - Optional email linking to anonymous account
+   - Login with email/password
+   - Password recovery
 
-2. **Расширенные метрики:**
-   - Кровь (сахар, холестерин)
-   - Температура
-   - Сон
-   - Настроение
+2. **Extended Metrics:**
+   - Blood (sugar, cholesterol)
+   - Temperature
+   - Sleep
+   - Mood
 
 3. **Sharing:**
-   - Приглашение других пользователей
-   - Просмотр профилей членов семьи
-   - Права доступа (read-only, edit)
+   - Invite other users
+   - View family member profiles
+   - Access rights (read-only, edit)
 
 4. **Analytics:**
-   - Корреляции между метриками
-   - Предсказания трендов
-   - Рекомендации
+   - Correlations between metrics
+   - Trend predictions
+   - Recommendations
 
 5. **Export:**
-   - PDF отчёты
-   - CSV экспорт
-   - Google Fit / Apple Health интеграция
+   - PDF reports
+   - CSV export
+   - Google Fit / Apple Health integration
 
 ---
 
-**Конец спецификации**
+**End of specification**

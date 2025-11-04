@@ -1,84 +1,45 @@
 # Health Dashboard PWA
 
-A Progressive Web App for tracking health metrics including weight, blood pressure, and pulse. Built with React, TypeScript, Vite, and Tailwind CSS.
+A simple Progressive Web App for tracking health metrics for the whole family. Monitor weight, blood pressure, pulse, temperature, and more through an intuitive mobile interface.
+
+![Health Dashboard Screenshot](specs/image.png)
+
+## Overview
+
+This PWA allows every family member to easily log their health metrics by simply:
+- Taking a photo of their measurement device (scale, blood pressure monitor, thermometer)
+- Recording a voice note about their reading
+
+The app automatically extracts the values and stores them in a timeline, making it easy to track health trends over time for each person.
 
 ## Features
 
-- 📊 **Track Multiple Metrics** - Monitor weight, blood pressure, and pulse
-- 📈 **Time-Series Charts** - Visualize your data over 1W/1M/1Y periods
-- 🌙 **Dark Mode** - Beautiful dark theme with localStorage persistence
-- 📱 **Mobile First** - Responsive design optimized for mobile devices
+- 👨‍👩‍👧‍👦 **Multi-User Support** - Track metrics for all family members
+- 📸 **Photo Recognition** - Take a picture of your device, AI extracts the values
+- 🎤 **Voice Input** - Record measurements verbally, AI processes the data
+- 📊 **Multiple Metrics** - Weight, blood pressure, pulse, temperature
+- 📈 **Time-Series Charts** - Visualize trends over 1W/1M/1Y periods
+- 📱 **Mobile First** - Optimized for smartphones, works like a native app
 - 🔌 **Offline Support** - Full PWA with service worker for offline usage
-- ⚡ **Fast & Modern** - Built with Vite for lightning-fast development
+- 🌙 **Dark Mode** - Eye-friendly dark theme
 
-## Getting Started
+## AI Processing
 
-### Installation
+Voice recordings and photos are processed using a simple n8n workflow that leverages Google's Gemini 2.5 model to extract health metrics from images and audio transcriptions.
 
-```bash
-# Install dependencies (use local cache if you have npm permission issues)
-npm install --cache .npm-cache
+![n8n Workflow](specs/n8n.png)
 
-# Generate PWA icons (PNG files for iOS)
-npm run generate-icons
-```
-
-### Development
-
-```bash
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
-```
-
-The app will be available at `http://localhost:5173`
-
-### Installing as PWA on iPhone
-
-**Important: Use Safari, not Chrome!** Chrome on iOS doesn't support PWA installation.
-
-1. Open the app in **Safari** browser
-2. Wait for the teal banner at the top (appears after 3 seconds)
-3. Follow the instructions: Tap Share button (↑) → "Add to Home Screen"
-4. Or manually: Share → Scroll down → "Add to Home Screen"
-5. The app icon will appear on your home screen
-6. Launch it like a native app with full-screen experience
-
-**How to verify it's a PWA:**
-- ✅ Opens in full-screen (no Safari address bar)
-- ✅ Has the teal pie chart icon
-- ✅ Named "Health" (not "Health Dashboard")
-- ✅ Works offline after first load
+The workflow:
+1. Receives webhook with photo or audio from the app
+2. Processes the media through Gemini 2.5 for data extraction
+3. Returns structured health metrics (weight, blood pressure, pulse, temperature)
+4. App stores the data in the timeline for the respective family member
 
 ## Tech Stack
 
-- **React 18** - UI library
-- **TypeScript** - Type safety
-- **Vite** - Build tool and dev server
-- **Tailwind CSS v4** - Utility-first CSS with new @theme syntax
-- **React Router** - Client-side routing
-- **Recharts** - Data visualization
+- **React 18** + **TypeScript** - Modern UI framework
+- **Vite** - Fast build tool and dev server
+- **Tailwind CSS v4** - Utility-first styling
 - **vite-plugin-pwa** - PWA support with service worker
-
-## Project Structure
-
-```
-├── public/          # Static assets
-├── src/
-│   ├── components/  # Reusable components (Layout, etc.)
-│   ├── pages/       # Route components (Dashboard, Feed, Settings)
-│   ├── App.tsx      # Main app component with routing
-│   ├── index.css    # Global styles and Tailwind config
-│   └── main.tsx     # App entry point
-├── design/          # Design reference files
-└── CLAUDE.md        # AI assistant guidance
-```
-
-## Design
-
-The design features a modern dark theme with a teal accent color (#30e8c9). Reference designs are available in the `/design` folder showing the dashboard layout and component structure.
+- **Recharts** - Data visualization
+- **n8n** + **Gemini 2.5** - AI-powered metric extraction from photos and voice

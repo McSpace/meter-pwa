@@ -1,18 +1,18 @@
 # Health Dashboard - Supabase Backend Implementation
 
-> **Обновленная спецификация с использованием Supabase**
+> **Updated specification using Supabase**
 >
-> Версия: 3.0 (Supabase)
-> Дата: 2024-10-06
+> Version: 3.0 (Supabase)
+> Date: 2024-10-06
 
 ---
 
-## 📖 Оглавление
+## 📖 Table of Contents
 
-1. [Почему Supabase](#почему-supabase)
-2. [Архитектура с Supabase](#архитектура-с-supabase)
-3. [Ключевые изменения](#ключевые-изменения)
-4. [Интеграция с Frontend](#интеграция-с-frontend)
+1. [Why Supabase](#why-supabase)
+2. [Architecture with Supabase](#architecture-with-supabase)
+3. [Key Changes](#key-changes)
+4. [Frontend Integration](#frontend-integration)
 5. [API Reference](#api-reference)
 6. [Authentication Flow](#authentication-flow)
 7. [Data Access Patterns](#data-access-patterns)
@@ -20,106 +20,106 @@
 
 ---
 
-## 🎯 Почему Supabase
+## 🎯 Why Supabase
 
-### Преимущества перед custom backend
+### Advantages over custom backend
 
-1. **Встроенная аутентификация** - Email + Google OAuth из коробки
-2. **Row Level Security (RLS)** - безопасность на уровне базы данных
-3. **Realtime subscriptions** - автоматические обновления UI
-4. **Storage API** - S3-совместимое хранилище с RLS
-5. **Auto-generated REST API** - не нужно писать CRUD endpoints
-6. **TypeScript SDK** - полная типизация из коробки
-7. **Бесплатный tier** - 500MB БД, 1GB Storage, 50K MAU
+1. **Built-in authentication** - Email + Google OAuth out of the box
+2. **Row Level Security (RLS)** - security at the database level
+3. **Realtime subscriptions** - automatic UI updates
+4. **Storage API** - S3-compatible storage with RLS
+5. **Auto-generated REST API** - no need to write CRUD endpoints
+6. **TypeScript SDK** - full typing out of the box
+7. **Free tier** - 500MB DB, 1GB Storage, 50K MAU
 
-### Что мы получаем бесплатно
+### What we get for free
 
-- ✅ PostgreSQL база данных
-- ✅ RESTful API для всех таблиц
+- ✅ PostgreSQL database
+- ✅ RESTful API for all tables
 - ✅ Authentication (email, OAuth providers)
-- ✅ Storage для файлов
+- ✅ Storage for files
 - ✅ Realtime subscriptions
 - ✅ Edge Functions (serverless)
 - ✅ Database webhooks
 
 ---
 
-## 🏗️ Архитектура с Supabase
+## 🏗️ Architecture with Supabase
 
-### Схема данных
+### Data Schema
 
 ```
 Supabase Auth (auth.users)
     ↓
-public.users (расширенные данные)
+public.users (extended data)
     ↓
-public.profiles (семейные профили)
+public.profiles (family profiles)
     ↓
-    ├── public.metrics (метрики здоровья)
-    └── public.media (ссылки на файлы)
+    ├── public.metrics (health metrics)
+    └── public.media (file references)
            ↓
     Supabase Storage
-    ├── photos bucket (фото)
-    └── audio bucket (голосовые заметки)
+    ├── photos bucket (photos)
+    └── audio bucket (voice notes)
 ```
 
-### Безопасность: Row Level Security
+### Security: Row Level Security
 
-Все таблицы защищены RLS политиками:
+All tables are protected by RLS policies:
 
 ```sql
--- Пример: пользователь видит только свои профили
+-- Example: user sees only their own profiles
 CREATE POLICY "Users can view own profiles"
   ON public.profiles
   FOR SELECT
   USING (auth.uid() = user_id);
 ```
 
-**Преимущества:**
-- Невозможно получить чужие данные даже если знаешь ID
-- Защита на уровне БД, а не приложения
-- Автоматически работает для REST API и Realtime
+**Advantages:**
+- Impossible to access other users' data even if you know the ID
+- Protection at the DB level, not application level
+- Automatically works for REST API and Realtime
 
 ---
 
-## 🔄 Ключевые изменения
+## 🔄 Key Changes
 
-### Было (Custom Backend)
+### Before (Custom Backend)
 
-- ❌ Нужно писать свой auth с JWT
-- ❌ Вручную создавать REST endpoints
-- ❌ Настраивать S3 и генерировать signed URLs
-- ❌ Реализовывать rate limiting
-- ❌ Писать валидацию и middleware
+- ❌ Need to write custom auth with JWT
+- ❌ Manually create REST endpoints
+- ❌ Configure S3 and generate signed URLs
+- ❌ Implement rate limiting
+- ❌ Write validation and middleware
 
-### Стало (Supabase)
+### After (Supabase)
 
-- ✅ Auth из коробки (email, Google, и др.)
+- ✅ Auth out of the box (email, Google, etc.)
 - ✅ Auto-generated REST API
-- ✅ Storage с RLS и автоматическими signed URLs
-- ✅ Rate limiting встроен
-- ✅ Валидация через database constraints
+- ✅ Storage with RLS and automatic signed URLs
+- ✅ Built-in rate limiting
+- ✅ Validation through database constraints
 
-### Изменение API endpoints
+### API endpoints change
 
-**Было:**
+**Before:**
 ```
 POST /api/auth/register
 POST /api/profiles
 GET  /api/metrics?profileId=xxx
 ```
 
-**Стало (Supabase REST API):**
+**After (Supabase REST API):**
 ```
 POST /auth/v1/signup
 POST /rest/v1/profiles
 GET  /rest/v1/metrics?profile_id=eq.xxx
 ```
 
-**Но мы будем использовать Supabase JS SDK**, который оборачивает эти endpoints:
+**But we will use Supabase JS SDK**, which wraps these endpoints:
 
 ```typescript
-// Вместо fetch('/api/profiles')
+// Instead of fetch('/api/profiles')
 const { data } = await supabase
   .from('profiles')
   .select('*')
@@ -127,15 +127,15 @@ const { data } = await supabase
 
 ---
 
-## 💻 Интеграция с Frontend
+## 💻 Frontend Integration
 
-### 1. Установка Supabase Client
+### 1. Installing Supabase Client
 
 ```bash
 npm install @supabase/supabase-js
 ```
 
-### 2. Создание клиента
+### 2. Creating the client
 
 `src/lib/supabase.ts`:
 
@@ -147,7 +147,7 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-// TypeScript types (будут сгенерированы автоматически)
+// TypeScript types (will be auto-generated)
 export type Database = {
   public: {
     Tables: {
@@ -163,14 +163,14 @@ export type Database = {
 ### 3. TypeScript Types Generation
 
 ```bash
-# Установка Supabase CLI
+# Install Supabase CLI
 npm install -g supabase
 
-# Генерация типов из базы
+# Generate types from database
 supabase gen types typescript --project-id YOUR_PROJECT_REF > src/types/database.ts
 ```
 
-Затем используем типы:
+Then use the types:
 
 ```typescript
 import { Database } from './types/database'
@@ -199,8 +199,8 @@ export async function signUp(email: string, password: string) {
 
   if (error) throw error
 
-  // Supabase автоматически создаст запись в auth.users
-  // Наш trigger создаст запись в public.users
+  // Supabase will automatically create a record in auth.users
+  // Our trigger will create a record in public.users
   return data
 }
 
@@ -253,12 +253,12 @@ export function App() {
   const [user, setUser] = useState<User | null>(null)
 
   useEffect(() => {
-    // Получить текущего пользователя
+    // Get current user
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user)
     })
 
-    // Слушать изменения auth state
+    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setUser(session?.user ?? null)
@@ -308,7 +308,7 @@ export async function createProfile(data: {
       name: data.name,
       gender: data.gender,
       date_of_birth: data.date_of_birth,
-      // user_id автоматически подставится из auth.uid()
+      // user_id will be automatically inserted from auth.uid()
     })
     .select()
     .single()
@@ -453,7 +453,7 @@ export async function deleteMetric(id: string) {
 ### Realtime Subscriptions
 
 ```typescript
-// Подписка на изменения метрик для профиля
+// Subscribe to metric changes for a profile
 export function subscribeToMetrics(
   profileId: string,
   callback: (metric: Metric) => void
@@ -479,7 +479,7 @@ export function subscribeToMetrics(
   }
 }
 
-// Использование в React
+// Usage in React
 useEffect(() => {
   const unsubscribe = subscribeToMetrics(profileId, (newMetric) => {
     setMetrics((prev) => [newMetric, ...prev])
@@ -564,7 +564,7 @@ export async function uploadPhoto(
   }
 }
 
-// Helper: создание thumbnail
+// Helper: create thumbnail
 async function createThumbnail(file: File): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const img = new Image()
@@ -623,7 +623,7 @@ export async function uploadAudio(
     .from('audio')
     .getPublicUrl(filePath)
 
-  // Get duration (если доступно в metadata)
+  // Get duration (if available in metadata)
   const duration = await getAudioDuration(audioBlob)
 
   // Save to DB
@@ -989,9 +989,9 @@ export function useProfiles() {
 
 ---
 
-## 📚 Дополнительные ресурсы
+## 📚 Additional Resources
 
-### Документация Supabase
+### Supabase Documentation
 
 - [Supabase Docs](https://supabase.com/docs)
 - [JavaScript Client](https://supabase.com/docs/reference/javascript)
@@ -999,55 +999,55 @@ export function useProfiles() {
 - [Storage Guide](https://supabase.com/docs/guides/storage)
 - [Realtime Guide](https://supabase.com/docs/guides/realtime)
 
-### Полезные ссылки
+### Useful Links
 
-- [SQL Editor](https://supabase.com/dashboard/project/_/sql) - выполнение SQL запросов
-- [Table Editor](https://supabase.com/dashboard/project/_/editor) - визуальное редактирование таблиц
-- [Auth Settings](https://supabase.com/dashboard/project/_/auth/users) - управление пользователями
-- [Storage Browser](https://supabase.com/dashboard/project/_/storage/buckets) - просмотр файлов
+- [SQL Editor](https://supabase.com/dashboard/project/_/sql) - execute SQL queries
+- [Table Editor](https://supabase.com/dashboard/project/_/editor) - visual table editing
+- [Auth Settings](https://supabase.com/dashboard/project/_/auth/users) - user management
+- [Storage Browser](https://supabase.com/dashboard/project/_/storage/buckets) - file browser
 
 ---
 
-## ✅ Чек-лист интеграции
+## ✅ Integration Checklist
 
 ### Backend Setup
-- [ ] Применить SQL миграции в Supabase
-- [ ] Настроить Email provider
-- [ ] Настроить Google OAuth
-- [ ] Создать Storage buckets
-- [ ] Проверить RLS политики
+- [ ] Apply SQL migrations in Supabase
+- [ ] Configure Email provider
+- [ ] Configure Google OAuth
+- [ ] Create Storage buckets
+- [ ] Verify RLS policies
 
 ### Frontend Integration
-- [ ] Установить `@supabase/supabase-js`
-- [ ] Создать `.env.local` с Supabase credentials
-- [ ] Создать Supabase client (`src/lib/supabase.ts`)
-- [ ] Сгенерировать TypeScript types
-- [ ] Создать AuthContext
-- [ ] Создать service файлы (auth, profile, metric, media)
-- [ ] Обновить компоненты для использования Supabase API
-- [ ] Добавить Auth callback route
-- [ ] Тестирование auth flow
-- [ ] Тестирование CRUD операций
-- [ ] Тестирование file upload
+- [ ] Install `@supabase/supabase-js`
+- [ ] Create `.env.local` with Supabase credentials
+- [ ] Create Supabase client (`src/lib/supabase.ts`)
+- [ ] Generate TypeScript types
+- [ ] Create AuthContext
+- [ ] Create service files (auth, profile, metric, media)
+- [ ] Update components to use Supabase API
+- [ ] Add Auth callback route
+- [ ] Test auth flow
+- [ ] Test CRUD operations
+- [ ] Test file upload
 
 ### Production
-- [ ] Настроить Email templates в Supabase
-- [ ] Настроить custom domain для Auth redirect
-- [ ] Включить email confirmation
-- [ ] Настроить rate limiting (если нужно больше чем defaults)
-- [ ] Мониторинг использования (Database, Storage, Bandwidth)
-- [ ] Backup стратегия
+- [ ] Configure Email templates in Supabase
+- [ ] Configure custom domain for Auth redirect
+- [ ] Enable email confirmation
+- [ ] Configure rate limiting (if more than defaults needed)
+- [ ] Monitor usage (Database, Storage, Bandwidth)
+- [ ] Backup strategy
 
 ---
 
-## 🚀 Следующие шаги
+## 🚀 Next Steps
 
-После настройки Supabase backend:
+After setting up Supabase backend:
 
-1. **Обновить существующие компоненты** для работы с Supabase
-2. **Добавить offline-first** с помощью [Supabase Realtime](https://supabase.com/docs/guides/realtime/presence)
-3. **Оптимизировать производительность** с помощью caching
-4. **Добавить Edge Functions** для server-side logic (например, создание thumbnails)
-5. **Настроить аналитику** через Supabase Dashboard
+1. **Update existing components** to work with Supabase
+2. **Add offline-first** using [Supabase Realtime](https://supabase.com/docs/guides/realtime/presence)
+3. **Optimize performance** with caching
+4. **Add Edge Functions** for server-side logic (e.g., thumbnail creation)
+5. **Configure analytics** via Supabase Dashboard
 
-Теперь у вас есть полноценный backend на Supabase! 🎉
+Now you have a full-featured Supabase backend! 🎉
