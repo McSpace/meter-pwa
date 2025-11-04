@@ -6,7 +6,7 @@
 
 - Аккаунт Supabase (https://supabase.com)
 - Созданный проект в Supabase
-- Access Token: `sbp_4e3b3f1701d356232d618e0a324dc65a70bb2f38`
+
 
 ---
 
