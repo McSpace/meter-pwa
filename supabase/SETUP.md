@@ -7,6 +7,12 @@ Complete instructions for setting up Supabase backend for Health Dashboard PWA.
 - Supabase account (https://supabase.com)
 - Created project in Supabase
 
+<<<<<<< HEAD
+=======
+- Аккаунт Supabase (https://supabase.com)
+- Созданный проект в Supabase
+
+>>>>>>> refs/remotes/origin/main
 
 ---
 
