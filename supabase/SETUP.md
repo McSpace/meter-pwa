@@ -1,116 +1,116 @@
 # Supabase Setup Guide
 
-Полная инструкция по настройке Supabase backend для Health Dashboard PWA.
+Complete instructions for setting up Supabase backend for Health Dashboard PWA.
 
-## 📋 Требования
+## 📋 Requirements
 
-- Аккаунт Supabase (https://supabase.com)
-- Созданный проект в Supabase
-- Access Token: `sbp_4e3b3f1701d356232d618e0a324dc65a70bb2f38`
+- Supabase account (https://supabase.com)
+- Created project in Supabase
+
 
 ---
 
-## 🚀 Шаг 1: Применение SQL Миграций
+## 🚀 Step 1: Applying SQL Migrations
 
-### Через Supabase Dashboard (SQL Editor)
+### Via Supabase Dashboard (SQL Editor)
 
-1. Откройте ваш проект в Supabase Dashboard
-2. Перейдите в **SQL Editor** (левое меню)
-3. Нажмите **New Query**
-4. Примените миграции в следующем порядке:
+1. Open your project in Supabase Dashboard
+2. Navigate to **SQL Editor** (left menu)
+3. Click **New Query**
+4. Apply migrations in the following order:
 
-#### 1.1 Основная схема базы данных
+#### 1.1 Main database schema
 
-Скопируйте содержимое файла `migrations/001_initial_schema.sql` и выполните:
+Copy the contents of `migrations/001_initial_schema.sql` and execute:
 
 ```sql
 -- Paste entire content of 001_initial_schema.sql
 ```
 
-#### 1.2 Row Level Security политики
+#### 1.2 Row Level Security policies
 
-Скопируйте содержимое файла `migrations/002_row_level_security.sql` и выполните:
+Copy the contents of `migrations/002_row_level_security.sql` and execute:
 
 ```sql
 -- Paste entire content of 002_row_level_security.sql
 ```
 
-#### 1.3 Storage buckets и политики
+#### 1.3 Storage buckets and policies
 
-Скопируйте содержимое файла `migrations/003_storage_setup.sql` и выполните:
+Copy the contents of `migrations/003_storage_setup.sql` and execute:
 
 ```sql
 -- Paste entire content of 003_storage_setup.sql
 ```
 
-### Через Supabase CLI (альтернатива)
+### Via Supabase CLI (alternative)
 
 ```bash
-# Установите Supabase CLI
+# Install Supabase CLI
 npm install -g supabase
 
-# Войдите в аккаунт
+# Login to your account
 supabase login
 
-# Свяжите локальный проект
+# Link local project
 supabase link --project-ref YOUR_PROJECT_REF
 
-# Примените миграции
+# Apply migrations
 supabase db push
 ```
 
 ---
 
-## 🔐 Шаг 2: Настройка Authentication
+## 🔐 Step 2: Authentication Setup
 
-### 2.1 Email Provider (уже включен по умолчанию)
+### 2.1 Email Provider (already enabled by default)
 
-1. Перейдите в **Authentication** → **Providers**
-2. Email provider должен быть уже включен
-3. Настройте (опционально):
-   - **Enable email confirmations**: ✅ (рекомендуется для продакшн)
+1. Navigate to **Authentication** → **Providers**
+2. Email provider should already be enabled
+3. Configure (optional):
+   - **Enable email confirmations**: ✅ (recommended for production)
    - **Enable email change confirmations**: ✅
-   - Настройте email templates по желанию
+   - Configure email templates as desired
 
 ### 2.2 Google OAuth Provider
 
-1. Перейдите в **Authentication** → **Providers**
-2. Найдите **Google** и нажмите **Enable**
-3. Вам понадобится создать OAuth credentials в Google Cloud Console:
+1. Navigate to **Authentication** → **Providers**
+2. Find **Google** and click **Enable**
+3. You will need to create OAuth credentials in Google Cloud Console:
 
-#### Создание Google OAuth Credentials:
+#### Creating Google OAuth Credentials:
 
-1. Откройте [Google Cloud Console](https://console.cloud.google.com)
-2. Создайте новый проект или выберите существующий
-3. Перейдите в **APIs & Services** → **Credentials**
-4. Нажмите **Create Credentials** → **OAuth 2.0 Client ID**
-5. Если требуется, настройте OAuth consent screen:
+1. Open [Google Cloud Console](https://console.cloud.google.com)
+2. Create a new project or select an existing one
+3. Navigate to **APIs & Services** → **Credentials**
+4. Click **Create Credentials** → **OAuth 2.0 Client ID**
+5. If required, configure OAuth consent screen:
    - **User Type**: External
    - **App name**: Health Dashboard
-   - **User support email**: ваш email
-   - **Authorized domains**: добавьте ваш домен
+   - **User support email**: your email
+   - **Authorized domains**: add your domain
    - **Scopes**: `email`, `profile`, `openid`
 
-6. Создайте OAuth Client ID:
+6. Create OAuth Client ID:
    - **Application type**: Web application
    - **Name**: Health Dashboard Web
    - **Authorized JavaScript origins**:
      - `https://YOUR_PROJECT_REF.supabase.co`
-     - `http://localhost:5173` (для разработки)
+     - `http://localhost:5173` (for development)
    - **Authorized redirect URIs**:
      - `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback`
-     - `http://localhost:54321/auth/v1/callback` (для локальной разработки)
+     - `http://localhost:54321/auth/v1/callback` (for local development)
 
-7. Скопируйте **Client ID** и **Client Secret**
+7. Copy **Client ID** and **Client Secret**
 
-8. Вернитесь в Supabase Dashboard → **Authentication** → **Providers** → **Google**:
-   - Вставьте **Client ID**
-   - Вставьте **Client Secret**
-   - Нажмите **Save**
+8. Return to Supabase Dashboard → **Authentication** → **Providers** → **Google**:
+   - Paste **Client ID**
+   - Paste **Client Secret**
+   - Click **Save**
 
-### 2.3 Настройка Redirect URLs
+### 2.3 Redirect URLs Setup
 
-В **Authentication** → **URL Configuration** добавьте:
+In **Authentication** → **URL Configuration** add:
 
 **Site URL**:
 ```
@@ -125,41 +125,41 @@ http://localhost:5173/auth/callback
 
 ---
 
-## 🗂️ Шаг 3: Проверка Storage Buckets
+## 🗂️ Step 3: Verify Storage Buckets
 
-1. Перейдите в **Storage** (левое меню)
-2. Убедитесь, что созданы два bucket'а:
-   - `photos` - для фотографий (лимит 10MB)
-   - `audio` - для голосовых заметок (лимит 5MB)
+1. Navigate to **Storage** (left menu)
+2. Ensure that two buckets are created:
+   - `photos` - for photos (10MB limit)
+   - `audio` - for voice notes (5MB limit)
 
-3. Проверьте настройки каждого bucket:
-   - **Public**: ❌ (должно быть выключено)
-   - **File size limit**: 10MB для photos, 5MB для audio
-   - **Allowed MIME types**: настроено согласно миграции
+3. Check settings for each bucket:
+   - **Public**: ❌ (should be disabled)
+   - **File size limit**: 10MB for photos, 5MB for audio
+   - **Allowed MIME types**: configured according to migration
 
-4. Проверьте RLS политики в **Policies** для каждого bucket
+4. Check RLS policies in **Policies** for each bucket
 
 ---
 
-## 🔑 Шаг 4: Получение API Credentials
+## 🔑 Step 4: Obtaining API Credentials
 
-1. Перейдите в **Settings** → **API**
-2. Скопируйте следующие данные:
+1. Navigate to **Settings** → **API**
+2. Copy the following data:
 
 ```
 Project URL: https://YOUR_PROJECT_REF.supabase.co
 Project API keys:
   - anon/public key: eyJhbG...
-  - service_role key: eyJhbG... (держите в секрете!)
+  - service_role key: eyJhbG... (keep secret!)
 ```
 
-3. Создайте файл `.env.local` в корне проекта (см. следующий шаг)
+3. Create a `.env.local` file in the project root (see next step)
 
 ---
 
-## 📝 Шаг 5: Конфигурация Frontend (.env.local)
+## 📝 Step 5: Frontend Configuration (.env.local)
 
-Создайте файл `.env.local` в корне проекта:
+Create a `.env.local` file in the project root:
 
 ```env
 # Supabase Configuration
@@ -171,7 +171,7 @@ VITE_APP_NAME=Health Dashboard
 VITE_APP_URL=https://meter-pwa-production.up.railway.app
 ```
 
-**⚠️ ВАЖНО**: Добавьте `.env.local` в `.gitignore`:
+**⚠️ IMPORTANT**: Add `.env.local` to `.gitignore`:
 
 ```bash
 echo ".env.local" >> .gitignore
@@ -179,55 +179,55 @@ echo ".env.local" >> .gitignore
 
 ---
 
-## ✅ Шаг 6: Проверка установки
+## ✅ Step 6: Verify Installation
 
-### 6.1 Проверка базы данных
+### 6.1 Database Verification
 
-Выполните в SQL Editor:
+Run in SQL Editor:
 
 ```sql
--- Проверка таблиц
+-- Check tables
 SELECT table_name
 FROM information_schema.tables
 WHERE table_schema = 'public';
 
--- Должны быть: users, profiles, metrics, media
+-- Should have: users, profiles, metrics, media
 
--- Проверка RLS
+-- Check RLS
 SELECT tablename, policyname
 FROM pg_policies
 WHERE schemaname = 'public';
 
--- Должны быть политики для всех таблиц
+-- Should have policies for all tables
 ```
 
-### 6.2 Проверка Storage
+### 6.2 Storage Verification
 
 ```sql
--- Проверка buckets
+-- Check buckets
 SELECT * FROM storage.buckets;
 
--- Должны быть: photos, audio
+-- Should have: photos, audio
 ```
 
-### 6.3 Проверка Auth
+### 6.3 Auth Verification
 
-1. Перейдите в **Authentication** → **Users**
-2. Попробуйте создать тестового пользователя через Dashboard
-3. После создания проверьте:
+1. Navigate to **Authentication** → **Users**
+2. Try creating a test user through Dashboard
+3. After creation, verify:
 
 ```sql
--- Проверка автоматического создания записи в public.users
+-- Check automatic creation of public.users record
 SELECT * FROM public.users;
 
--- Должна быть запись с id созданного пользователя
+-- Should have a record with the created user's id
 ```
 
 ---
 
-## 🧪 Шаг 7: Тестирование API
+## 🧪 Step 7: API Testing
 
-### 7.1 Тест регистрации через email
+### 7.1 Email Registration Test
 
 ```bash
 curl -X POST 'https://YOUR_PROJECT_REF.supabase.co/auth/v1/signup' \
@@ -239,10 +239,10 @@ curl -X POST 'https://YOUR_PROJECT_REF.supabase.co/auth/v1/signup' \
   }'
 ```
 
-### 7.2 Тест создания профиля
+### 7.2 Profile Creation Test
 
 ```bash
-# Сначала получите access_token из предыдущего запроса
+# First, get the access_token from the previous request
 
 curl -X POST 'https://YOUR_PROJECT_REF.supabase.co/rest/v1/profiles' \
   -H "apikey: YOUR_ANON_KEY" \
@@ -256,7 +256,7 @@ curl -X POST 'https://YOUR_PROJECT_REF.supabase.co/rest/v1/profiles' \
   }'
 ```
 
-### 7.3 Тест загрузки файла
+### 7.3 File Upload Test
 
 ```bash
 curl -X POST 'https://YOUR_PROJECT_REF.supabase.co/storage/v1/object/photos/USER_ID/test.jpg' \
@@ -269,27 +269,27 @@ curl -X POST 'https://YOUR_PROJECT_REF.supabase.co/storage/v1/object/photos/USER
 
 ## 🐛 Troubleshooting
 
-### Ошибка: "relation does not exist"
-- Убедитесь, что все миграции выполнены в правильном порядке
-- Проверьте логи в **Database** → **Logs**
+### Error: "relation does not exist"
+- Ensure all migrations are executed in the correct order
+- Check logs in **Database** → **Logs**
 
-### Ошибка: "new row violates row-level security policy"
-- Проверьте, что RLS политики созданы правильно
-- Убедитесь, что используете правильный JWT token
-- Проверьте `auth.uid()` в SQL Editor: `SELECT auth.uid();`
+### Error: "new row violates row-level security policy"
+- Verify that RLS policies are created correctly
+- Make sure you're using the correct JWT token
+- Check `auth.uid()` in SQL Editor: `SELECT auth.uid();`
 
-### Ошибка при загрузке файлов: "new row violates row-level security policy for table objects"
-- Убедитесь, что путь файла начинается с `{user_id}/`
-- Проверьте Storage RLS политики в миграции 003
+### File upload error: "new row violates row-level security policy for table objects"
+- Ensure the file path starts with `{user_id}/`
+- Check Storage RLS policies in migration 003
 
-### Google OAuth не работает
-- Проверьте правильность Client ID и Client Secret
-- Убедитесь, что Authorized redirect URIs совпадают с Supabase URL
-- Проверьте статус OAuth consent screen (должен быть Published для продакшн)
+### Google OAuth not working
+- Verify Client ID and Client Secret are correct
+- Ensure Authorized redirect URIs match Supabase URL
+- Check OAuth consent screen status (should be Published for production)
 
 ---
 
-## 📚 Дополнительные ресурсы
+## 📚 Additional Resources
 
 - [Supabase Documentation](https://supabase.com/docs)
 - [Row Level Security Guide](https://supabase.com/docs/guides/auth/row-level-security)
@@ -298,30 +298,30 @@ curl -X POST 'https://YOUR_PROJECT_REF.supabase.co/storage/v1/object/photos/USER
 
 ---
 
-## 🔄 Следующие шаги
+## 🔄 Next Steps
 
-После успешной настройки Supabase:
+After successful Supabase setup:
 
-1. Установите Supabase клиент в frontend:
+1. Install Supabase client in frontend:
    ```bash
    npm install @supabase/supabase-js
    ```
 
-2. Создайте Supabase client в `src/lib/supabase.ts`
+2. Create Supabase client in `src/lib/supabase.ts`
 
-3. Реализуйте интеграцию с компонентами:
+3. Implement integration with components:
    - Authentication flow
    - Profile management
    - Metrics tracking
    - Media upload
 
-4. Обновите компоненты для работы с реальными данными из Supabase
+4. Update components to work with real data from Supabase
 
 ---
 
-## 📧 Поддержка
+## 📧 Support
 
-Если возникли проблемы:
-1. Проверьте логи в Supabase Dashboard → **Logs**
-2. Используйте SQL Editor для отладки запросов
-3. Проверьте Network tab в браузере для API запросов
+If you encounter issues:
+1. Check logs in Supabase Dashboard → **Logs**
+2. Use SQL Editor for debugging queries
+3. Check Network tab in browser for API requests

@@ -1,20 +1,20 @@
-# Supabase Backend для Health Dashboard
+# Supabase Backend for Health Dashboard
 
-## 🎯 Быстрый старт
+## 🎯 Quick Start
 
-### 1. Применить миграции
+### 1. Apply Migrations
 
-Откройте Supabase Dashboard → SQL Editor и выполните по порядку:
+Open Supabase Dashboard → SQL Editor and execute in order:
 
-1. `migrations/001_initial_schema.sql` - создание таблиц
-2. `migrations/002_row_level_security.sql` - настройка безопасности
-3. `migrations/003_storage_setup.sql` - создание storage buckets
+1. `migrations/001_initial_schema.sql` - create tables
+2. `migrations/002_row_level_security.sql` - configure security
+3. `migrations/003_storage_setup.sql` - create storage buckets
 
-### 2. Настроить Auth
+### 2. Configure Auth
 
 **Authentication → Providers**:
-- ✅ Email (уже включен)
-- ✅ Google OAuth ([инструкции в SETUP.md](./SETUP.md#22-google-oauth-provider))
+- ✅ Email (already enabled)
+- ✅ Google OAuth ([instructions in SETUP.md](./SETUP.md#22-google-oauth-provider))
 
 **URL Configuration**:
 ```
@@ -24,19 +24,19 @@ Redirect URLs:
   - http://localhost:5173/auth/callback
 ```
 
-### 3. Создать .env.local
+### 3. Create .env.local
 
 ```bash
 cp .env.example .env.local
 ```
 
-Заполните значениями из **Settings → API**:
+Fill with values from **Settings → API**:
 ```env
 VITE_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbG...
 ```
 
-### 4. Установить Supabase клиент
+### 4. Install Supabase Client
 
 ```bash
 npm install @supabase/supabase-js
@@ -44,50 +44,50 @@ npm install @supabase/supabase-js
 
 ---
 
-## 📁 Структура файлов
+## 📁 File Structure
 
 ```
 supabase/
-├── README.md                  # Этот файл
-├── SETUP.md                   # Полная инструкция
+├── README.md                  # This file
+├── SETUP.md                   # Complete setup guide
 └── migrations/
-    ├── 001_initial_schema.sql       # Таблицы
-    ├── 002_row_level_security.sql   # RLS политики
+    ├── 001_initial_schema.sql       # Tables
+    ├── 002_row_level_security.sql   # RLS policies
     └── 003_storage_setup.sql        # Storage buckets
 ```
 
 ---
 
-## 📚 Документация
+## 📚 Documentation
 
-- **[SETUP.md](./SETUP.md)** - подробная инструкция по настройке
-- **[BACKEND_SUPABASE.md](../BACKEND_SUPABASE.md)** - API reference и примеры кода
-- **[BACKEND_SPEC.md](../BACKEND_SPEC.md)** - оригинальная спецификация (для справки)
+- **[SETUP.md](./SETUP.md)** - detailed setup instructions
+- **[BACKEND_SUPABASE.md](../BACKEND_SUPABASE.md)** - API reference and code examples
+- **[BACKEND_SPEC.md](../BACKEND_SPEC.md)** - original specification (for reference)
 
 ---
 
-## 🔍 Проверка установки
+## 🔍 Installation Verification
 
-После применения миграций:
+After applying migrations:
 
 ```sql
--- Проверить таблицы
+-- Check tables
 SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';
--- Должны быть: users, profiles, metrics, media
+-- Should have: users, profiles, metrics, media
 
--- Проверить Storage buckets
+-- Check Storage buckets
 SELECT * FROM storage.buckets;
--- Должны быть: photos, audio
+-- Should have: photos, audio
 ```
 
 ---
 
-## 🚀 Следующие шаги
+## 🚀 Next Steps
 
-1. ✅ Применить миграции
-2. ✅ Настроить Auth providers
-3. ⬜ Создать Supabase client в frontend
-4. ⬜ Реализовать auth flow
-5. ⬜ Обновить компоненты для работы с API
+1. ✅ Apply migrations
+2. ✅ Configure Auth providers
+3. ⬜ Create Supabase client in frontend
+4. ⬜ Implement auth flow
+5. ⬜ Update components to work with API
 
-См. [BACKEND_SUPABASE.md](../BACKEND_SUPABASE.md) для примеров кода.
+See [BACKEND_SUPABASE.md](../BACKEND_SUPABASE.md) for code examples.
