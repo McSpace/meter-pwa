@@ -9,19 +9,19 @@ WORKDIR /app
 
 # Build-time configuration for the Vite application
 # These will be provided by Railway environment variables
-ARG VITE_APP_NAME
-ARG VITE_APP_URL
-ARG VITE_SUPABASE_ANON_KEY
-ARG VITE_SUPABASE_URL
-ARG VITE_AI_ANALYSIS_API_URL
+# ARG VITE_APP_NAME
+# ARG VITE_APP_URL
+# ARG VITE_SUPABASE_ANON_KEY
+# ARG VITE_SUPABASE_URL
+# ARG VITE_AI_ANALYSIS_API_URL
 
-# Expose build arguments to the Vite build
-ENV \
-  VITE_APP_NAME="${VITE_APP_NAME}" \
-  VITE_APP_URL="${VITE_APP_URL}" \
-  VITE_SUPABASE_ANON_KEY="${VITE_SUPABASE_ANON_KEY}" \
-  VITE_SUPABASE_URL="${VITE_SUPABASE_URL}" \
-  VITE_AI_ANALYSIS_API_URL="${VITE_AI_ANALYSIS_API_URL}"
+# # Expose build arguments to the Vite build
+# ENV \
+#   VITE_APP_NAME="${VITE_APP_NAME}" \
+#   VITE_APP_URL="${VITE_APP_URL}" \
+#   VITE_SUPABASE_ANON_KEY="${VITE_SUPABASE_ANON_KEY}" \
+#   VITE_SUPABASE_URL="${VITE_SUPABASE_URL}" \
+#   VITE_AI_ANALYSIS_API_URL="${VITE_AI_ANALYSIS_API_URL}"
 
 # Install dependencies using the lockfile for reproducible builds
 COPY package*.json ./
