@@ -38,4 +38,5 @@
            registry-login-server: memeter.azurecr.io
            registry-username: ${{ secrets.REGISTRY_USERNAME }}
            registry-password: ${{ secrets.REGISTRY_PASSWORD }}
+           location: westeurope
    
