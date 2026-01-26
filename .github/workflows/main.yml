@@ -33,10 +33,11 @@
          uses: azure/aci-deploy@v1
          with:
            resource-group: MeMeter
-           dns-name-label: myapp
+           dns-name-label: memeter
            image: memeter.azurecr.io/myapp:${{ github.sha }}
            registry-login-server: memeter.azurecr.io
            registry-username: ${{ secrets.REGISTRY_USERNAME }}
            registry-password: ${{ secrets.REGISTRY_PASSWORD }}
            location: westeurope
+           name: memeter
    
