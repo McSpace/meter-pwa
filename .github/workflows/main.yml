@@ -40,4 +40,5 @@
            registry-password: ${{ secrets.REGISTRY_PASSWORD }}
            location: westeurope
            name: memeter
+           ports: 8080
    
