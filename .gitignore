@@ -31,3 +31,6 @@ generate-icons.html
 
 # Keep PWA icons
 !public/*.png
+.claude
+.github/*.*
+.github/workflows/main.yml
