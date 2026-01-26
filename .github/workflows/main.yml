@@ -41,4 +41,5 @@
            location: westeurope
            name: memeter
            ports: 8080
-           environment-variables: ${{ secrets.AZURE_ENV }}
+           environment-variables: | 
+             ${{ secrets.AZURE_ENV }}
