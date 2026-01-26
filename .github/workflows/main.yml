@@ -1,0 +1,41 @@
+   name: Build and Deploy to ACI
+
+   on:
+     push:
+       branches:
+         - main
+
+   jobs:
+     build:
+       runs-on: ubuntu-latest
+       steps:
+       - name: Checkout code
+         uses: actions/checkout@v2
+
+       - name: Log in to Azure
+         uses: azure/login@v1
+         with:
+           creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+       - name: Build and push Docker image
+         uses: azure/docker-login@v1
+         with:
+           login-server: memeter.azurecr.io
+           username: ${{ secrets.REGISTRY_USERNAME }}
+           password: ${{ secrets.REGISTRY_PASSWORD }}
+
+       - name: Build and push
+         run: |
+           docker build . -t memeter.azurecr.io/myapp:${{ github.sha }}
+           docker push memeter.azurecr.io/myapp:${{ github.sha }}
+
+       - name: Deploy to Azure Container Instances
+         uses: azure/aci-deploy@v1
+         with:
+           resource-group: MeMeter
+           dns-name-label: myapp
+           image: memeter.azurecr.io/myapp:${{ github.sha }}
+           registry-login-server: memeter.azurecr.io
+           registry-username: ${{ secrets.REGISTRY_USERNAME }}
+           registry-password: ${{ secrets.REGISTRY_PASSWORD }}
+   
